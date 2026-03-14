@@ -132,7 +132,9 @@ async def handle_driver_route(update: Update, context: ContextTypes.DEFAULT_TYPE
     keyboard = create_calendar_keyboard(now.year, now.month)
 
     await update.message.reply_text(
-        "📅 Select your travel date:",
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "✦  SELECT DATE  ✦\n"
+        "━━━━━━━━━━━━━━━━━━━━━━",
         reply_markup=keyboard,
     )
 

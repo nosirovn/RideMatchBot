@@ -259,9 +259,38 @@ TEXTS: dict[str, dict[str, str]] = {
         "ur": "⛔ آپ کو یہ کمانڈ استعمال کرنے کی اجازت نہیں۔",
     },
     "idle_hint": {
-        "en": "Use /start to begin, /post_driver to offer a ride, or /find_ride to search.",
-        "ar": "استخدم /start للبدء، /post_driver لعرض رحلة، أو /find_ride للبحث.",
-        "ur": "/start شروع کرنے کے لیے، /post_driver سواری پیش کرنے کے لیے، /find_ride تلاش کرنے کے لیے۔",
+        "en": "Use the menu buttons below to get started.",
+        "ar": "استخدم أزرار القائمة أدناه للبدء.",
+        "ur": "شروع کرنے کے لیے نیچے مینیو بٹن استعمال کریں۔",
+    },
+    "help_text": {
+        "en": (
+            "🙋🏻‍♂️ *RideMatch Help*\n\n"
+            "🚗 *Find Ride* — Search for available rides\n"
+            "🚙 *Offer Ride* — Post a ride as a driver\n"
+            "📍 *Share Location* — Share your location for better matching\n"
+            "🌍 *Language* — Change your language\n"
+            "📅 *My Trips* — View your rides and reservations\n\n"
+            "Need more help? Use /report to contact admins."
+        ),
+        "ar": (
+            "🙋🏻‍♂️ *مساعدة RideMatch*\n\n"
+            "🚗 *البحث عن رحلة* — ابحث عن الرحلات المتاحة\n"
+            "🚙 *عرض رحلة* — انشر رحلة كسائق\n"
+            "📍 *مشاركة الموقع* — شارك موقعك لمطابقة أفضل\n"
+            "🌍 *اللغة* — غير لغتك\n"
+            "📅 *رحلاتي* — عرض رحلاتك وحجوزاتك\n\n"
+            "تحتاج مزيد من المساعدة؟ استخدم /report للتواصل مع المشرفين."
+        ),
+        "ur": (
+            "🙋🏻‍♂️ *RideMatch مدد*\n\n"
+            "🚗 *سواری تلاش کریں* — دستیاب سواریاں تلاش کریں\n"
+            "🚙 *سواری پیش کریں* — بطور ڈرائیور سواری شائع کریں\n"
+            "📍 *مقام شیئر کریں* — بہتر مماثلت کے لیے اپنا مقام شیئر کریں\n"
+            "🌍 *زبان* — اپنی زبان تبدیل کریں\n"
+            "📅 *میرے سفر* — اپنی سواریاں اور ریزرویشنز دیکھیں\n\n"
+            "مزید مدد چاہیے؟ /report استعمال کریں ایڈمنز سے رابطہ کرنے کے لیے۔"
+        ),
     },
     "no_reservations": {
         "en": "📋 You have no trip reservations.",

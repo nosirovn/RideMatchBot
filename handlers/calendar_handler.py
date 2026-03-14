@@ -1,6 +1,5 @@
-"""
-calendar_handler.py — Interactive calendar and hour selector for date/time picking.
-Replaces text-based date/time input with inline keyboard UI.
+"""calendar_handler.py — Interactive calendar and hour selector for date/time picking.
+Black, white & golden premium design inspired by BookingCard UI.
 """
 from __future__ import annotations
 
@@ -18,65 +17,99 @@ logger = logging.getLogger(__name__)
 
 
 def create_calendar_keyboard(year: int, month: int) -> InlineKeyboardMarkup:
-    """Generate interactive calendar with month navigation."""
-    keyboard = []
+    """Black/white/golden calendar grid."""
+    kb = []
 
-    prev_month = month - 1 if month > 1 else 12
-    prev_year = year if month > 1 else year - 1
-    next_month = month + 1 if month < 12 else 1
-    next_year = year if month < 12 else year + 1
+    prev_m = month - 1 if month > 1 else 12
+    prev_y = year if month > 1 else year - 1
+    next_m = month + 1 if month < 12 else 1
+    next_y = year if month < 12 else year + 1
 
-    keyboard.append([
-        InlineKeyboardButton("◀", callback_data=f"cal:prev:{prev_year}:{prev_month}"),
-        InlineKeyboardButton(f"{cal.month_name[month]} {year}", callback_data="cal:noop"),
-        InlineKeyboardButton("▶", callback_data=f"cal:next:{next_year}:{next_month}"),
+    # ── Title row ──
+    kb.append([
+        InlineKeyboardButton("◀️", callback_data=f"cal:prev:{prev_y}:{prev_m}"),
+        InlineKeyboardButton(
+            f"✦ {cal.month_name[month].upper()} {year} ✦",
+            callback_data="cal:noop",
+        ),
+        InlineKeyboardButton("▶️", callback_data=f"cal:next:{next_y}:{next_m}"),
     ])
 
-    keyboard.append([
-        InlineKeyboardButton(day, callback_data="cal:noop")
-        for day in ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+    # ── Day-of-week header ──
+    kb.append([
+        InlineKeyboardButton(d, callback_data="cal:noop")
+        for d in ["S", "M", "T", "W", "T", "F", "S"]
     ])
 
-    month_calendar = cal.monthcalendar(year, month)
+    # ── Day grid (Sunday-first) ──
     today = datetime.utcnow().date()
+    month_cal = cal.Calendar(firstweekday=6).monthdayscalendar(year, month)
 
-    for week in month_calendar:
-        week_buttons = []
+    for week in month_cal:
+        row = []
         for day in week:
             if day == 0:
-                week_buttons.append(InlineKeyboardButton(" ", callback_data="cal:noop"))
+                row.append(InlineKeyboardButton(" ", callback_data="cal:noop"))
             else:
-                date_obj = datetime(year, month, day).date()
-                if date_obj >= today:
-                    week_buttons.append(
-                        InlineKeyboardButton(
-                            str(day),
-                            callback_data=f"select_day:{year}:{month}:{day}"
-                        )
-                    )
+                d = datetime(year, month, day).date()
+                if d < today:
+                    # Past — dark
+                    row.append(InlineKeyboardButton(
+                        f"  {day}  ", callback_data="cal:noop"
+                    ))
+                elif d == today:
+                    # Today — golden highlight
+                    row.append(InlineKeyboardButton(
+                        f"◈ {day} ◈",
+                        callback_data=f"select_day:{year}:{month}:{day}",
+                    ))
                 else:
-                    week_buttons.append(InlineKeyboardButton(" ", callback_data="cal:noop"))
-        keyboard.append(week_buttons)
+                    # Future — selectable white
+                    row.append(InlineKeyboardButton(
+                        f" {day} ",
+                        callback_data=f"select_day:{year}:{month}:{day}",
+                    ))
+        kb.append(row)
 
-    return InlineKeyboardMarkup(keyboard)
+    return InlineKeyboardMarkup(kb)
 
 
 def create_hour_keyboard() -> InlineKeyboardMarkup:
-    """Generate hour selector (0-23)."""
-    keyboard = []
-    hours = list(range(24))
+    """Black/golden time picker — grouped by time of day, 4-column grid."""
+    kb = []
 
-    for i in range(0, 24, 4):
-        row = [
-            InlineKeyboardButton(
+    # Header
+    kb.append([
+        InlineKeyboardButton("✦  SELECT TIME  ✦", callback_data="cal:noop")
+    ])
+
+    sections = [
+        ("☀️ Morning",  range(5, 12)),
+        ("🌤 Afternoon", range(12, 18)),
+        ("🌙 Evening",   range(18, 24)),
+        ("🌑 Night",     range(0, 5)),
+    ]
+
+    for label, hours in sections:
+        kb.append([InlineKeyboardButton(f"─── {label} ───", callback_data="cal:noop")])
+        row = []
+        for h in hours:
+            row.append(InlineKeyboardButton(
                 f"{h:02d}:00",
-                callback_data=f"select_hour:{h}"
-            ) for h in hours[i:i+4]
-        ]
-        keyboard.append(row)
+                callback_data=f"select_hour:{h}",
+            ))
+            if len(row) == 4:
+                kb.append(row)
+                row = []
+        if row:
+            kb.append(row)
 
-    return InlineKeyboardMarkup(keyboard)
+    return InlineKeyboardMarkup(kb)
 
+
+# ═══════════════════════════════════════════════════════════════
+# Callback handlers
+# ═══════════════════════════════════════════════════════════════
 
 async def calendar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle calendar navigation (next/prev month)."""
@@ -84,7 +117,6 @@ async def calendar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await query.answer()
 
     data = query.data
-
     if data == "cal:noop":
         return
 
@@ -92,10 +124,8 @@ async def calendar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if len(parts) < 4:
         return
 
-    direction = parts[1]
     year = int(parts[2])
     month = int(parts[3])
-
     if month < 1 or month > 12:
         return
 
@@ -108,17 +138,12 @@ async def select_day_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     await query.answer()
 
-    data = query.data
-    parts = data.split(":")
-
+    parts = query.data.split(":")
     if len(parts) != 4:
         return
 
     try:
-        year = int(parts[1])
-        month = int(parts[2])
-        day = int(parts[3])
-
+        year, month, day = int(parts[1]), int(parts[2]), int(parts[3])
         date_obj = datetime(year, month, day)
         if date_obj.date() < datetime.utcnow().date():
             await query.answer(text="❌ Cannot select past dates", show_alert=True)
@@ -129,37 +154,41 @@ async def select_day_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     date_str = f"{year:04d}-{month:02d}-{day:02d}"
     context.user_data["date"] = date_str
+
     role = context.user_data.get("role", "driver")
-    if role == "traveler":
-        context.user_data["state"] = "traveler_awaiting_time_selection"
-    else:
-        context.user_data["state"] = "driver_awaiting_time_selection"
+    context.user_data["state"] = (
+        "traveler_awaiting_time_selection" if role == "traveler"
+        else "driver_awaiting_time_selection"
+    )
 
     display_date = date_obj.strftime("%d %B %Y")
-
     keyboard = create_hour_keyboard()
 
     await query.edit_message_text(
-        text=f"✅ Date selected: {display_date}\n\nSelect hour:",
-        reply_markup=keyboard
+        text=(
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"✦  DATE CONFIRMED  ✦\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"  📅  {display_date}\n\n"
+            f"Now select your departure time:"
+        ),
+        reply_markup=keyboard,
     )
 
 
 async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle hour selection (no minutes)."""
+    """Handle hour selection."""
     query = update.callback_query
     await query.answer()
 
-    data = query.data
-    parts = data.split(":")
-
+    parts = query.data.split(":")
     if len(parts) != 2:
         return
 
     try:
         hour = int(parts[1])
         if not (0 <= hour <= 23):
-            raise ValueError("Hour must be 0-23")
+            raise ValueError
     except (ValueError, IndexError):
         await query.answer(text="❌ Invalid hour", show_alert=True)
         return
@@ -173,8 +202,7 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     context.user_data["time"] = time_str
 
     try:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-        display_date = date_obj.strftime("%d %B %Y")
+        display_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%d %B %Y")
     except ValueError:
         display_date = date_str
 
@@ -183,15 +211,24 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
     if role == "traveler":
         context.user_data["state"] = "traveler_awaiting_passengers"
-        await query.edit_message_text(
-            text=f"✅ Time selected: {time_str}\n"
-                 f"📅 {display_date} ⏰ {time_str}\n\n"
-                 f"{t('enter_passengers', lang)}"
-        )
+        prompt = t("enter_passengers", lang)
     else:
         context.user_data["state"] = "driver_awaiting_seats"
-        await query.edit_message_text(
-            text=f"✅ Time selected: {time_str}\n"
-                 f"📅 {display_date} ⏰ {time_str}\n\n"
-                 f"{t('enter_seats', lang)}"
-        )
+        prompt = t("enter_seats", lang)
+
+    await query.edit_message_text(
+        text=(
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"✦  BOOKING SUMMARY  ✦\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"  📅  {display_date}\n"
+            f"  ⏰  {time_str}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"⚠️ *Attention:* Please ensure your Name\n"
+            f"and Phone Number are visible in your\n"
+            f"Telegram profile settings.\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"{prompt}"
+        ),
+        parse_mode="Markdown",
+    )

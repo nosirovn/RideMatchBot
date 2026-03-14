@@ -81,7 +81,9 @@ async def handle_traveler_route(update: Update, context: ContextTypes.DEFAULT_TY
     now = datetime.utcnow()
     keyboard = create_calendar_keyboard(now.year, now.month)
     await update.message.reply_text(
-        "📅 Select your travel date:",
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "✦  SELECT DATE  ✦\n"
+        "━━━━━━━━━━━━━━━━━━━━━━",
         reply_markup=keyboard,
     )
 

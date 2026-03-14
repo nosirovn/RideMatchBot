@@ -111,6 +111,21 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         lang = _lang(context)
         await update.message.reply_text(t("location_saved", lang), reply_markup=main_menu_keyboard(lang))
         return
+    if text == "🌍 Language":
+        lang = _lang(context)
+        await update.message.reply_text(
+            t("choose_lang", lang),
+            reply_markup=LANG_KEYBOARD,
+        )
+        return
+    if text == "🙋🏻‍♂️ Help":
+        lang = _lang(context)
+        await update.message.reply_text(
+            t("help_text", lang),
+            parse_mode="Markdown",
+            reply_markup=main_menu_keyboard(lang),
+        )
+        return
 
     if state == "driver_awaiting_route" or (state == "awaiting_route" and context.user_data.get("role") == "driver"):
         context.user_data["state"] = "driver_awaiting_route"
