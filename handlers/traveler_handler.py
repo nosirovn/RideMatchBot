@@ -1,11 +1,11 @@
 """
-traveler_handler.py — Traveler flow: find ride, reserve seat, rate driver, report.
+traveler_handler.py – Traveler flow: find ride, reserve seats, rate driver, report.
 """
-from __future__ import annotations
 
+from __future__ import annotations
 import logging
 import re
-from datetime import datetime
+from datetime import import datetime
 
 from telegram import (
     Update,
@@ -38,314 +38,306 @@ from handlers.start_handler import (
     route_keyboard, DATE_PATTERN, TIME_PATTERN,
     _lang, _clear_state,
 )
+from handlers.calendar_handler import (
+    create_calendar_keyboard,
+    create_hour_keyboard,
+)
 
 logger = logging.getLogger(__name__)
 
 
-# ── /find_ride ───────────────────────────────────────────────
+# — /find_ride ————————————————————————————————————————————————
 
 async def find_ride_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    upsert_user(user.id, user.username)
-    if is_user_blocked(user.id):
-        await update.message.reply_text(t("blocked_user", _lang(context)))
-        return
+        """Find ride by from→to location and date."""
+        user = update.effective_user
+        upsert_user(user.id, user.first_name, user.last_name)
 
-    _clear_state(context)
-    context.user_data["state"] = "traveler_awaiting_route"
-    context.user_data["role"] = "traveler"
-    lang = _lang(context)
-    await update.message.reply_text(
-        t("traveler_mode", lang),
-        parse_mode="Markdown",
-        reply_markup=route_keyboard(),
-    )
+    lang = get_user_lang(user.id)
+    context.user_data["lang"] = lang
+    context.user_data["state"] = "find_ride_start"
 
+    msg = t(lang, "find_ride_request")  # "Enter departure city:"
+    await update.message.reply_text(msg, reply_markup=ReplyKeyboardRemove())
 
-# ── /my_trips (traveler side) ────────────────────────────────
-
-async def my_trips_traveler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_id = update.effective_user.id
-    lang = _lang(context)
-    reservations = get_user_reservations(user_id)
-
-    if not reservations:
-        await update.message.reply_text("You have no reservations yet.")
-        return
-
-    lines = ["📋 *Your reservations:*\n"]
-    for rv in reservations:
-        status_icon = {"pending": "⏳", "approved": "✅", "rejected": "❌"}.get(rv["status"], "❓")
-        try:
-            dd = datetime.strptime(rv["date"], "%Y-%m-%d").strftime("%d %B %Y")
-        except ValueError:
-            dd = rv["date"]
-        lines.append(
-            f"{status_icon} *{rv['route']}*\n"
-            f"  📅 {dd}  ⏰ {rv.get('time', '-')}\n"
-            f"  🚗 Driver: @{rv.get('driver_username', '?')}\n"
-            f"  💺 Seats: {rv['seats_reserved']}  Status: {rv['status']}\n"
-        )
-    await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
-
-
-# ── /my_trips unified router ────────────────────────────────
-
-async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Show both driver and traveler trips."""
-    from handlers.driver_handler import my_trips_driver
-    await my_trips_driver(update, context)
-    await my_trips_traveler(update, context)
-
-
-# ── /report ──────────────────────────────────────────────────
-
-async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    lang = _lang(context)
-    _clear_state(context)
-    context.user_data["state"] = "awaiting_report_text"
-    await update.message.reply_text(t("report_prompt", lang))
-
-
-async def handle_report_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = update.message.text.strip()
-    lang = _lang(context)
-    user_id = update.effective_user.id
-    save_report(user_id, None, None, text)
-    log_event("report", user_id, extra=text[:200])
-    await update.message.reply_text(t("report_saved", lang))
-    _clear_state(context)
-
-
-# ═══════════════════════════════════════════════════════════════
-# Traveler text-state handlers
-# ═══════════════════════════════════════════════════════════════
 
 async def handle_traveler_route(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = update.message.text.strip()
-    lang = _lang(context)
-    if text not in ROUTES:
-        await update.message.reply_text(t("choose_route_btn", lang), reply_markup=route_keyboard())
-        return
-    context.user_data["route"] = text
-    context.user_data["state"] = "traveler_awaiting_date"
-    await update.message.reply_text(t("enter_date", lang), reply_markup=ReplyKeyboardRemove())
+        """Traveler enters departure and destination."""
+        state = context.user_data.get("state")
+        lang = context.user_data.get("lang", DEFAULT_LANG)
+
+    if not state:
+                context.user_data["state"] = "find_route_dep"
+                msg = t(lang, "enter_departure")
+                await update.message.reply_text(msg)
+                return
+
+    if state == "find_route_dep":
+                departure = update.message.text
+                context.user_data["departure"] = departure
+                context.user_data["state"] = "find_route_dest"
+                msg = t(lang, "enter_destination")
+                await update.message.reply_text(msg)
+
+elif state == "find_route_dest":
+            destination = update.message.text
+            context.user_data["destination"] = destination
+            context.user_data["state"] = "find_route_date"
+
+        # Show calendar for date selection
+            keyboard = create_calendar_keyboard()
+            msg = t(lang, "select_date")
+            await update.message.reply_text(msg, reply_markup=keyboard)
 
 
 async def handle_traveler_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = update.message.text.strip()
-    lang = _lang(context)
-    m = DATE_PATTERN.match(text)
-    if not m:
-        await update.message.reply_text(t("invalid_date", lang))
-        return
-    day, month, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
-    try:
-        parsed = datetime(year, month, day)
-    except ValueError:
-        await update.message.reply_text(t("invalid_date", lang))
-        return
-    if parsed.date() < datetime.utcnow().date():
-        await update.message.reply_text(t("past_date", lang))
-        return
-    context.user_data["date"] = parsed.strftime("%Y-%m-%d")
-    context.user_data["state"] = "traveler_awaiting_passengers"
-    await update.message.reply_text(t("enter_passengers", lang))
+        """Callback for calendar date selection (replaces text-based input)."""
+        query = update.callback_query
+        await query.answer()
+
+    lang = context.user_data.get("lang", DEFAULT_LANG)
+    prefix, value = query.data.split(":", 1)
+
+    if prefix == "select_day":
+                # Date selected
+                context.user_data["date"] = value  # YYYY-MM-DD format
+        context.user_data["state"] = "find_route_time"
+
+        # Show hour picker
+        keyboard = create_hour_keyboard()
+        msg = t(lang, "select_time")
+        await query.edit_message_text(msg, reply_markup=keyboard)
+
+elif prefix == "select_hour":
+        # Time selected
+        context.user_data["time"] = value  # HH:00 format
+        context.user_data["state"] = "search_rides"
+
+        # Now search for rides
+        await search_rides(update, context)
 
 
-async def handle_traveler_passengers(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = update.message.text.strip()
-    lang = _lang(context)
-    if not text.isdigit() or not (1 <= int(text) <= 10):
-        await update.message.reply_text(t("number_1_10", lang))
-        return
+async def search_rides(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Search for available rides matching traveler criteria."""
+        query = update.callback_query
+        lang = context.user_data.get("lang", DEFAULT_LANG)
 
-    passengers = int(text)
-    context.user_data["passengers"] = passengers
-    user = update.effective_user
-    route = context.user_data["route"]
-    date = context.user_data["date"]
+    departure = context.user_data.get("departure")
+    destination = context.user_data.get("destination")
+    ride_date = context.user_data.get("date")
+    ride_time = context.user_data.get("time", "00:00")
 
-    # Save the search request for smart notifications
-    save_search_request(user.id, route, date, passengers)
-    log_event("search", user.id, route)
+    if not all([departure, destination, ride_date]):
+                msg = t(lang, "missing_search_params")
+                await query.answer(msg)
+                return
 
-    # Use AI matching service
-    matches = rank_rides(
-        route=route,
-        date=date,
-        passengers=passengers,
-        tolerance_h=TIME_MATCH_TOLERANCE_HOURS,
+    # Save search request for analytics
+    save_search_request(
+                user_id=query.from_user.id,
+                departure=departure,
+                destination=destination,
+                search_date=ride_date,
+                search_time=ride_time,
     )
 
-    display_date = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
+    # Get rides and rank them
+    from database import find_drivers
+    available_rides = find_drivers(departure, destination, ride_date)
 
-    if not matches:
-        await update.message.reply_text(
-            t("no_rides_found", lang, route=route, date=display_date),
-            parse_mode="Markdown",
-        )
-        _clear_state(context)
-        return
+    if not available_rides:
+                msg = t(lang, "no_rides_found")
+                await query.edit_message_text(msg)
+                return
 
-    # Show results with inline buttons
-    for i, d in enumerate(matches[:10]):  # limit to 10 results
-        try:
-            dd = datetime.strptime(d["date"], "%Y-%m-%d").strftime("%d %B %Y")
-        except ValueError:
-            dd = d["date"]
-        avg = d.get("avg_rating", 0)
-        rating_str = f"⭐ {avg}/5" if avg else "No ratings"
-        avail = "🟢 Available now" if d.get("available_now") else ""
-        dist = f"📏 {d['distance_km']} km" if d.get("distance_km") else ""
+    # Rank rides by AI service
+    ranked = rank_rides(available_rides, ride_time)
 
-        card = (
-            f"🚗 Driver: @{d['username']}\n"
-            f"📍 Route: {d['route']}\n"
-            f"📅 Date: {dd}\n"
-            f"⏰ Time: {d['time']}\n"
-            f"💺 Seats available: {d['seats_available']}\n"
-            f"Rating: {rating_str}\n"
-            f"{avail}\n{dist}"
-        ).strip()
+    # Display top 5 results
+    keyboard_buttons = []
+    for i, ride in enumerate(ranked[:5], 1):
+                btn = InlineKeyboardButton(
+                                text=f"{i}. {ride['departure']}→{ride['destination']} {ride['ride_time']} (${ride['price_per_seat']})",
+                                callback_data=f"select_ride:{ride['ride_id']}"
+                )
+                keyboard_buttons.append([btn])
 
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton(
-                f"🪑 Request {passengers} seat(s)",
-                callback_data=f"reserve:{d['id']}:{passengers}",
-            )]
-        ])
-        await update.message.reply_text(card, reply_markup=keyboard)
+    keyboard = InlineKeyboardMarkup(keyboard_buttons)
+    msg = t(lang, "available_rides")
+    await query.edit_message_text(msg, reply_markup=keyboard)
 
-    _clear_state(context)
+    context.user_data["available_rides"] = ranked
 
 
-# ═══════════════════════════════════════════════════════════════
-# Inline callback handlers (reservation + rating)
-# ═══════════════════════════════════════════════════════════════
+async def handle_traveler_passing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Traveler selects a ride and requests seats."""
+        query = update.callback_query
+        await query.answer()
 
-async def reservation_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle reserve:<ride_id>:<seats> callback."""
-    query = update.callback_query
-    await query.answer()
-    data = query.data  # "reserve:42:2"
-    parts = data.split(":")
-    if len(parts) != 3:
-        return
-    ride_id, seats = int(parts[1]), int(parts[2])
-    traveler = update.effective_user
-    lang = get_user_lang(traveler.id)
-
-    res_id = request_seat(ride_id, traveler.id, seats)
-    if res_id is None:
-        await query.edit_message_text("❌ Not enough seats available or ride not found.")
-        return
+    lang = context.user_data.get("lang", DEFAULT_LANG)
+    _, ride_id = query.data.split(":")
+    ride_id = int(ride_id)
 
     ride = get_ride(ride_id)
+    if not ride or ride["available_seats"] <= 0:
+                msg = t(lang, "ride_no_longer_available")
+                await query.answer(msg, show_alert=True)
+                return
+
+    context.user_data["selected_ride_id"] = ride_id
+    context.user_data["state"] = "request_seats"
+
+    # Ask how many seats
+    keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton(text=str(i), callback_data=f"seats:{i}")]
+                for i in range(1, min(ride["available_seats"] + 1, 7))
+    ])
+
+    msg = t(lang, "how_many_seats")
+    await query.edit_message_text(msg, reply_markup=keyboard)
+
+
+async def reservation_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Process seat reservation."""
+        query = update.callback_query
+        await query.answer()
+
+    lang = context.user_data.get("lang", DEFAULT_LANG)
+    _, seats_str = query.data.split(":")
+    seats_requested = int(seats_str)
+
+    ride_id = context.user_data.get("selected_ride_id")
+    if not ride_id:
+                msg = t(lang, "error_no_ride_selected")
+                await query.answer(msg, show_alert=True)
+                return
+
     try:
-        dd = datetime.strptime(ride["date"], "%Y-%m-%d").strftime("%d %B %Y")
-    except (ValueError, TypeError):
-        dd = ride["date"] if ride else "?"
+                # Request seat through reservation service
+                reservation = request_seat(
+                                ride_id=ride_id,
+                                traveler_id=query.from_user.id,
+                                seats_requested=seats_requested
+                )
 
-    await query.edit_message_text(
-        f"✅ Reservation request sent!\n"
-        f"Waiting for driver approval…"
-    )
+        msg = t(lang, "reservation_pending")
+        await query.edit_message_text(msg)
 
-    # Notify the driver
-    await notify_driver_reservation(
-        context,
-        driver_id=ride["driver_id"],
-        reservation_id=res_id,
-        traveler_username=traveler.username or "no_username",
-        route=ride["route"],
-        display_date=dd,
-        seats=seats,
-    )
-
-
-async def reservation_decision_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle res_approve:<id> / res_reject:<id> callback from driver."""
-    query = update.callback_query
-    await query.answer()
-    data = query.data
-    if data.startswith("res_approve:"):
-        res_id = int(data.split(":")[1])
-        res = handle_approve(res_id)
-        if not res:
-            await query.edit_message_text("❌ Could not approve (already handled or not enough seats).")
-            return
-        ride = get_ride(res["ride_id"])
-        driver_username = ride["username"] if ride else "?"
-        try:
-            dd = datetime.strptime(ride["date"], "%Y-%m-%d").strftime("%d %B %Y")
-        except (ValueError, TypeError):
-            dd = "?"
-        await query.edit_message_text(f"✅ Reservation #{res_id} approved.")
-        await notify_reservation_result(
-            context, res["traveler_id"], True,
-            driver_username, ride["route"] if ride else "?",
-            dd, ride["time"] if ride else "?",
+        # Notify driver
+        ride = get_ride(ride_id)
+        notify_driver_reservation(
+                        driver_id=ride["driver_id"],
+                        reservation=reservation,
+                        ride=ride,
         )
 
-    elif data.startswith("res_reject:"):
-        res_id = int(data.split(":")[1])
-        res = handle_reject(res_id)
-        if not res:
-            await query.edit_message_text("❌ Could not reject (already handled).")
-            return
-        ride = get_ride(res["ride_id"])
-        driver_username = ride["username"] if ride else "?"
-        try:
-            dd = datetime.strptime(ride["date"], "%Y-%m-%d").strftime("%d %B %Y")
-        except (ValueError, TypeError):
-            dd = "?"
-        await query.edit_message_text(f"❌ Reservation #{res_id} rejected.")
-        await notify_reservation_result(
-            context, res["traveler_id"], False,
-            driver_username, ride["route"] if ride else "?",
-            dd, ride["time"] if ride else "?",
-        )
+        context.user_data["state"] = "reservation_pending"
+        context.user_data["reservation_id"] = reservation["reservation_id"]
+
+except ValueError as e:
+        msg = t(lang, "reservation_failed") + f"\n{str(e)}"
+        await query.answer(msg, show_alert=True)
 
 
-# ═══════════════════════════════════════════════════════════════
-# Rating flow
-# ═══════════════════════════════════════════════════════════════
+async def reservation_decision_call(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Driver approves or rejects reservation."""
+        query = update.callback_query
+        await query.answer()
+
+    lang = context.user_data.get("lang", DEFAULT_LANG)
+    action, res_id = query.data.split(":")
+    res_id = int(res_id)
+
+    if action == "approve":
+                handle_approve(res_id)
+                msg = t(lang, "reservation_approved")
+elif action == "reject":
+            handle_reject(res_id)
+            msg = t(lang, "reservation_rejected")
+else:
+            msg = t(lang, "unknown_action")
+
+    await query.edit_message_text(msg)
+
 
 async def rate_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle rate:<driver_id>:<ride_id> callback — ask for 1–5 stars."""
-    query = update.callback_query
-    await query.answer()
-    parts = query.data.split(":")
-    if len(parts) != 3:
-        return
-    driver_id, ride_id = int(parts[1]), int(parts[2])
-    context.user_data["rating_driver_id"] = driver_id
-    context.user_data["rating_ride_id"] = ride_id
-    context.user_data["state"] = "awaiting_rating"
+        """Traveler rates driver (1-5 stars)."""
+        query = update.callback_query
+        await query.answer()
 
-    stars_kb = InlineKeyboardMarkup([[
-        InlineKeyboardButton(f"{'⭐' * i}", callback_data=f"stars:{i}")
-        for i in range(1, 6)
-    ]])
-    lang = _lang(context)
-    await query.edit_message_text(t("rate_prompt", lang), reply_markup=stars_kb)
+    lang = context.user_data.get("lang", DEFAULT_LANG)
+    _, rating = query.data.split(":")
+    rating = int(rating)
+
+    ride_id = context.user_data.get("selected_ride_id")
+    ride = get_ride(ride_id)
+
+    if not ride:
+                await query.answer(t(lang, "error_ride_not_found"), show_alert=True)
+                return
+
+    # Save rating
+    add_rating(
+                from_user_id=query.from_user.id,
+                to_user_id=ride["driver_id"],
+                ride_id=ride_id,
+                rating_value=rating,
+    )
+
+    msg = t(lang, "rating_saved")
+    await query.edit_message_text(msg)
+
+    context.user_data["state"] = "rating_done"
 
 
 async def stars_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle stars:N callback."""
-    query = update.callback_query
-    await query.answer()
-    parts = query.data.split(":")
-    if len(parts) != 2:
-        return
-    rating = int(parts[1])
-    driver_id = context.user_data.pop("rating_driver_id", None)
-    ride_id = context.user_data.pop("rating_ride_id", None)
-    if not driver_id:
-        return
-    traveler_id = update.effective_user.id
-    add_rating(driver_id, traveler_id, ride_id, rating)
-    lang = _lang(context)
-    await query.edit_message_text(t("rating_saved", lang, rating=rating))
-    context.user_data.pop("state", None)
+        """Inline button callback for star ratings."""
+        await rate_callback(update, context)
+
+
+async def my_trips_traveler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Show traveler's reservations / trips."""
+        user = update.effective_user
+        lang = get_user_lang(user.id)
+
+    reservations = get_user_reservations(user.id)
+
+    if not reservations:
+                msg = t(lang, "no_trips")
+                await update.message.reply_text(msg)
+                return
+
+    msg = t(lang, "your_reservations") + "\n\n"
+    for res in reservations:
+                ride = get_ride(res["ride_id"])
+                msg += f"🚗 {ride['departure']}→{ride['destination']} {ride['ride_date']} {ride['ride_time']}\n"
+                msg += f"   Status: {res['status']}\n\n"
+
+    await update.message.reply_text(msg)
+
+
+async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Traveler reports a driver or ride issue."""
+        user = update.effective_user
+        lang = get_user_lang(user.id)
+
+    context.user_data["state"] = "report_start"
+    msg = t(lang, "describe_issue")
+    await update.message.reply_text(msg, reply_markup=ReplyKeyboardRemove())
+
+
+async def handle_report_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Traveler submits report text."""
+        user = update.effective_user
+        lang = context.user_data.get("lang", DEFAULT_LANG)
+        report_text = update.message.text
+
+    save_report(
+                user_id=user.id,
+                report_text=report_text,
+                ride_id=context.user_data.get("selected_ride_id"),
+    )
+
+    msg = t(lang, "report_submitted")
+    await update.message.reply_text(msg)
+    context.user_data["state"] = None
