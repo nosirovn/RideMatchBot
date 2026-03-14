@@ -194,7 +194,7 @@ async def cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:
 # Main
 # ═══════════════════════════════════════════════════════════════
 
-async def main() -> None:
+def main() -> None:
     # Initialise database tables
     init_db()
 
@@ -235,8 +235,9 @@ async def main() -> None:
     app.job_queue.run_repeating(cleanup_job, interval=CLEANUP_INTERVAL_SECONDS, first=10)
 
     logger.info("RideMatch bot starting…")
-    await app.run_polling()
+    app.run_polling()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    main()
