@@ -107,6 +107,23 @@ def create_hour_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(kb)
 
 
+def create_number_picker(max_num: int = 7) -> InlineKeyboardMarkup:
+    """Golden-themed inline number picker (1 to max_num)."""
+    kb = []
+    row = []
+    for n in range(1, max_num + 1):
+        row.append(InlineKeyboardButton(
+            f" {n} ",
+            callback_data=f"pick_num:{n}",
+        ))
+        if len(row) == 4:
+            kb.append(row)
+            row = []
+    if row:
+        kb.append(row)
+    return InlineKeyboardMarkup(kb)
+
+
 # ═══════════════════════════════════════════════════════════════
 # Callback handlers
 # ═══════════════════════════════════════════════════════════════
@@ -216,6 +233,8 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         context.user_data["state"] = "driver_awaiting_seats"
         prompt = t("enter_seats", lang)
 
+    number_kb = create_number_picker(7)
+
     await query.edit_message_text(
         text=(
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -231,4 +250,5 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
             f"{prompt}"
         ),
         parse_mode="Markdown",
+        reply_markup=number_kb,
     )

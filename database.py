@@ -426,7 +426,8 @@ def get_user_reservations(user_id: int) -> list[dict]:
     conn = get_connection()
     rows = conn.execute(
         """
-        SELECT res.*, r.route, r.date, r.time, r.username AS driver_username
+        SELECT res.*, r.route, r.date, r.time,
+               r.username AS driver_username, r.driver_id
         FROM reservations res
         JOIN rides r ON r.id = res.ride_id
         WHERE res.traveler_id = ?
@@ -441,7 +442,13 @@ def get_user_reservations(user_id: int) -> list[dict]:
 def get_ride_reservations(ride_id: int) -> list[dict]:
     conn = get_connection()
     rows = conn.execute(
-        "SELECT * FROM reservations WHERE ride_id=? ORDER BY created_at DESC",
+        """
+        SELECT res.*, u.username AS traveler_name
+        FROM reservations res
+        LEFT JOIN users u ON u.user_id = res.traveler_id
+        WHERE res.ride_id=?
+        ORDER BY res.created_at DESC
+        """,
         (ride_id,),
     ).fetchall()
     conn.close()

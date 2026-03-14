@@ -94,28 +94,28 @@ async def handle_traveler_date(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def handle_traveler_passengers(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Traveler enters number of passengers, search & display rides."""
-    text = update.message.text.strip()
-    lang = _lang(context)
-    if not text.isdigit() or not (1 <= int(text) <= 10):
-        await update.message.reply_text(t("number_1_10", lang))
-        return
+    """Deprecated — passengers now selected via inline number picker."""
+    pass
 
-    passengers = int(text)
+
+async def process_traveler_passengers(passengers: int, user_id: int,
+                                       context: ContextTypes.DEFAULT_TYPE,
+                                       send_message) -> None:
+    """Process passenger selection (called from pick_num callback)."""
+    lang = _lang(context)
     context.user_data["passengers"] = passengers
     route = context.user_data.get("route")
     date = context.user_data.get("date")
     preferred_time = context.user_data.get("time")
 
     rides = rank_rides(route, date, passengers, preferred_time=preferred_time)
-    save_search_request(update.effective_user.id, route, date, passengers)
-    log_event("search", update.effective_user.id, route)
+    save_search_request(user_id, route, date, passengers)
+    log_event("search", user_id, route)
 
     if not rides:
         display_date = datetime.strptime(date, "%Y-%m-%d").strftime("%d/%m/%Y")
-        await update.message.reply_text(
+        await send_message(
             t("no_rides_found", lang, route=route, date=display_date),
-            parse_mode="Markdown",
         )
         _clear_state(context)
         return
@@ -127,17 +127,19 @@ async def handle_traveler_passengers(update: Update, context: ContextTypes.DEFAU
         time_str = r.get("time") or "N/A"
         avg = r.get("avg_rating", 0)
         rating_str = f" ⭐{avg}" if avg else ""
+        driver_id = r.get("driver_id", 0)
+        driver_name = r.get("username") or "Driver"
         msg += (
-            f"\n🚗 {r['username']} — {time_str}"
+            f"\n🚗 [{driver_name}](tg://user?id={driver_id}) — {time_str}"
             f"\n💺 {r['seats_available']} seats{rating_str}\n"
         )
         buttons.append([InlineKeyboardButton(
-            f"Reserve {r['username']} ({time_str})",
+            f"Reserve {driver_name} ({time_str})",
             callback_data=f"reserve:{r['id']}"
         )])
 
     keyboard = InlineKeyboardMarkup(buttons)
-    await update.message.reply_text(msg, parse_mode="Markdown", reply_markup=keyboard)
+    await send_message(msg, reply_markup=keyboard)
     _clear_state(context)
 
 
@@ -155,7 +157,13 @@ async def reservation_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
     res_id = request_seat(ride_id, user.id, passengers)
     if not res_id:
-        await query.edit_message_text("❌ Reservation failed (ride full or unavailable).")
+        await query.edit_message_text(
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✦  RESERVATION FAILED ❌  ✦\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "Ride is full or unavailable.\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━"
+        )
         return
 
     ride = get_ride(ride_id)
@@ -164,11 +172,18 @@ async def reservation_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     except (ValueError, TypeError):
         display_date = ride.get("date", "?")
 
-    await query.edit_message_text("✅ Reservation request sent! Waiting for driver approval.")
+    await query.edit_message_text(
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "✦  REQUEST SENT ✅  ✦\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "Waiting for driver approval.\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━"
+    )
 
     await notify_driver_reservation(
         context, ride["driver_id"], res_id,
         user.first_name or "Traveler", ride["route"], display_date, passengers,
+        traveler_id=user.id,
     )
 
 
@@ -183,7 +198,11 @@ async def reservation_decision_callback(update: Update, context: ContextTypes.DE
         res = handle_approve(res_id)
         if res:
             ride = get_ride(res["ride_id"])
-            await query.edit_message_text("✅ Reservation approved!")
+            await query.edit_message_text(
+                "━━━━━━━━━━━━━━━━━━━━━━\n"
+                "✦  APPROVED ✅  ✦\n"
+                "━━━━━━━━━━━━━━━━━━━━━━"
+            )
             if ride:
                 try:
                     display_date = datetime.strptime(ride["date"], "%Y-%m-%d").strftime("%d/%m/%Y")
@@ -193,20 +212,38 @@ async def reservation_decision_callback(update: Update, context: ContextTypes.DE
                     context, res["traveler_id"], True,
                     ride.get("username", "driver"), ride["route"],
                     display_date, ride.get("time", "N/A"),
+                    driver_id=ride.get("driver_id", 0),
                 )
         else:
-            await query.edit_message_text("❌ Could not approve (already processed or not enough seats).")
+            await query.edit_message_text(
+                "━━━━━━━━━━━━━━━━━━━━━━\n"
+                "✦  ERROR ❌  ✦\n"
+                "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "Could not approve (already processed\n"
+                "or not enough seats).\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━━"
+            )
 
     elif data.startswith("res_reject:"):
         res_id = int(data.split(":")[1])
         res = handle_reject(res_id)
         if res:
-            await query.edit_message_text("❌ Reservation rejected.")
+            await query.edit_message_text(
+                "━━━━━━━━━━━━━━━━━━━━━━\n"
+                "✦  REJECTED ❌  ✦\n"
+                "━━━━━━━━━━━━━━━━━━━━━━"
+            )
             await notify_reservation_result(
                 context, res["traveler_id"], False, "", "", "", "",
             )
         else:
-            await query.edit_message_text("❌ Could not reject (already processed).")
+            await query.edit_message_text(
+                "━━━━━━━━━━━━━━━━━━━━━━\n"
+                "✦  ERROR ❌  ✦\n"
+                "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "Could not reject (already processed).\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━━"
+            )
 
 
 # — Rating callbacks ————————————————————————————————————————————————
@@ -269,31 +306,51 @@ async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     lines = []
 
     if rides:
-        lines.append("📋 *Your posted rides:*\n")
+        lines.append(
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✦  YOUR POSTED RIDES  ✦\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+        )
         for r in rides:
             try:
                 dd = datetime.strptime(r["date"], "%Y-%m-%d").strftime("%d %B %Y")
             except ValueError:
                 dd = r["date"]
             reservs = get_ride_reservations(r["id"])
-            approved = sum(1 for rv in reservs if rv["status"] == "approved")
-            pending = sum(1 for rv in reservs if rv["status"] == "pending")
+            approved_list = [rv for rv in reservs if rv["status"] == "approved"]
+            pending_list = [rv for rv in reservs if rv["status"] == "pending"]
             lines.append(
                 f"🚗 *{r['route']}*\n"
-                f" 📅 {dd} ⏰ {r['time']}\n"
-                f" 💺 {r['seats_available']}/{r['seats_total']} seats left\n"
-                f" ✅ {approved} approved · ⏳ {pending} pending\n"
-                f" /delete\\_{r['id']}\n"
+                f"  📅 {dd}  ⏰ {r['time']}\n"
+                f"  💺 {r['seats_available']}/{r['seats_total']} seats left\n"
+                f"  ✅ {len(approved_list)} approved · ⏳ {len(pending_list)} pending\n"
             )
+            for rv in approved_list:
+                tname = rv.get('traveler_name') or 'Traveler'
+                tid = rv.get('traveler_id', 0)
+                lines.append(f"    ✅ [{tname}](tg://user?id={tid}) ({rv['seats_reserved']} seat)\n")
+            for rv in pending_list:
+                tname = rv.get('traveler_name') or 'Traveler'
+                tid = rv.get('traveler_id', 0)
+                lines.append(f"    ⏳ [{tname}](tg://user?id={tid}) ({rv['seats_reserved']} seat)\n")
+            lines.append(f"  /delete\\_{r['id']}\n")
 
     if reservations:
-        lines.append("\n📋 *Your reservations:*\n")
+        lines.append(
+            "\n━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✦  YOUR RESERVATIONS  ✦\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+        )
         for res in reservations:
             status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
+            driver_name = res.get('driver_username') or 'Driver'
+            driver_id = res.get('driver_id', 0)
             lines.append(
                 f"{status_icon} {res['route']} — {res['date']}\n"
-                f"   Driver: {res.get('driver_username', '?')} | Status: {res['status']}\n"
+                f"   🚗 [{driver_name}](tg://user?id={driver_id}) | {res['status']}\n"
             )
+
+    lines.append("━━━━━━━━━━━━━━━━━━━━━━")
 
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
@@ -327,12 +384,19 @@ async def my_trips_traveler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await update.message.reply_text(t("no_reservations", lang))
         return
 
-    lines = ["📋 *Your trip reservations:*\n"]
+    lines = [
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "✦  YOUR RESERVATIONS  ✦\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+    ]
     for res in reservations:
         status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
+        driver_name = res.get('driver_username') or 'Driver'
+        driver_id = res.get('driver_id', 0)
         lines.append(
             f"{status_icon} {res['route']} — {res['date']}\n"
-            f"   Driver: {res.get('driver_username', '?')} | Status: {res['status']}\n"
+            f"   🚗 [{driver_name}](tg://user?id={driver_id}) | {res['status']}\n"
         )
+    lines.append("━━━━━━━━━━━━━━━━━━━━━━")
 
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")

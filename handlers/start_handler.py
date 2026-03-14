@@ -35,10 +35,15 @@ logger = logging.getLogger(__name__)
 
 LANG_KEYBOARD = InlineKeyboardMarkup([
     [
-        InlineKeyboardButton("English 🇬🇧", callback_data="lang:en"),
         InlineKeyboardButton("العربية 🇸🇦", callback_data="lang:ar"),
-        InlineKeyboardButton("اردو 🇵🇰", callback_data="lang:ur"),
-    ]
+        InlineKeyboardButton("English 🇬🇧", callback_data="lang:en"),
+        InlineKeyboardButton("Deutsch 🇩🇪", callback_data="lang:de"),
+    ],
+    [
+        InlineKeyboardButton("Français 🇫🇷", callback_data="lang:fr"),
+        InlineKeyboardButton("Русский 🇷🇺", callback_data="lang:ru"),
+        InlineKeyboardButton("Oʻzbek 🇺🇿", callback_data="lang:uz"),
+    ],
 ])
 
 

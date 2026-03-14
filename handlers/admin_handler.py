@@ -33,16 +33,20 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     s = get_stats()
     text = (
-        "📊 *Admin Dashboard*\n\n"
-        f"Total rides posted: {s['total_rides']}\n"
-        f"Active rides (24h): {s['active_rides']}\n"
-        f"Total reservations: {s['total_reservations']}\n"
-        f"Approved reservations: {s['approved_reservations']}\n"
-        f"Registered users: {s['total_users']}\n"
-        f"Ratings submitted: {s['total_ratings']}\n"
-        f"Reports filed: {s['total_reports']}\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "✦  ADMIN DASHBOARD  ✦\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"🚗 Total rides posted: {s['total_rides']}\n"
+        f"📍 Active rides (24h): {s['active_rides']}\n"
+        f"📋 Total reservations: {s['total_reservations']}\n"
+        f"✅ Approved reservations: {s['approved_reservations']}\n"
+        f"👥 Registered users: {s['total_users']}\n"
+        f"⭐ Ratings submitted: {s['total_ratings']}\n"
+        f"🚨 Reports filed: {s['total_reports']}\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"🔥 Most popular route: {s['popular_route']}\n"
-        f"⏰ Busiest hour: {s['busiest_hour']}\n"
+        f"⏰ Busiest hour: {s['busiest_hour']}\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━"
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 

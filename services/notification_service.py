@@ -30,6 +30,7 @@ async def notify_travelers_of_new_ride(
     route: str, date: str,
     driver_name: str, display_date: str,
     time_val: str, seats: int,
+    driver_id: int = 0,
 ) -> None:
     """Notify travelers whose saved search matches the new ride."""
     searchers = find_matching_search_requests(route, date)
@@ -40,6 +41,7 @@ async def notify_travelers_of_new_ride(
             "new_ride_notif", lang,
             name=driver_name, route=route,
             date=display_date, time=time_val, seats=seats,
+            driver_id=driver_id,
         )
         try:
             await context.bot.send_message(chat_id=uid, text=msg, parse_mode="Markdown")
@@ -53,6 +55,7 @@ async def notify_driver_reservation(
     reservation_id: int,
     traveler_name: str,
     route: str, display_date: str, seats: int,
+    traveler_id: int = 0,
 ) -> None:
     """Send reservation request to driver with Approve/Reject buttons."""
     lang = get_user_lang(driver_id)
@@ -60,6 +63,7 @@ async def notify_driver_reservation(
         "reservation_request", lang,
         traveler=traveler_name, route=route,
         date=display_date, seats=seats,
+        traveler_id=traveler_id,
     )
     keyboard = InlineKeyboardMarkup([
         [
@@ -80,16 +84,18 @@ async def notify_reservation_result(
     context: ContextTypes.DEFAULT_TYPE,
     traveler_id: int,
     approved: bool,
-    driver_username: str,
+    driver_name: str,
     route: str, display_date: str, time_val: str,
+    driver_id: int = 0,
 ) -> None:
     """Notify traveler of approval/rejection."""
     lang = get_user_lang(traveler_id)
     if approved:
         text = t(
             "reservation_approved", lang,
-            driver=driver_username, route=route,
+            driver=driver_name, route=route,
             date=display_date, time=time_val,
+            driver_id=driver_id,
         )
     else:
         text = t("reservation_rejected", lang)

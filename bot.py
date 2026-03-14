@@ -5,8 +5,9 @@ location handler, periodic cleanup & completion jobs, and starts long-polling.
 from __future__ import annotations
 import asyncio
 import logging
-from telegram import Update
+from telegram import BotCommand, Update
 from telegram.ext import (
+    Application,
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
@@ -41,6 +42,7 @@ from handlers.driver_handler import (
     delete_command,
     handle_driver_route,
     handle_driver_seats,
+    process_driver_seats,
     my_trips_driver,
 )
 from handlers.traveler_handler import (
@@ -50,6 +52,7 @@ from handlers.traveler_handler import (
     handle_report_text,
     handle_traveler_route,
     handle_traveler_passengers,
+    process_traveler_passengers,
     reservation_callback,
     reservation_decision_callback,
     rate_callback,
@@ -126,21 +129,24 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     if state == "driver_awaiting_route":
         return await handle_driver_route(update, context)
-    if state == "driver_awaiting_seats":
-        return await handle_driver_seats(update, context)
 
     if state == "traveler_awaiting_route":
         return await handle_traveler_route(update, context)
-    if state == "traveler_awaiting_passengers":
-        return await handle_traveler_passengers(update, context)
 
     if state == "awaiting_report_text":
         return await handle_report_text(update, context)
 
-    # Calendar/hour picker is active — remind user to use the inline buttons
+    # Calendar/hour/number picker is active — remind user to use the inline buttons
     if state in ("driver_awaiting_date_selection", "traveler_awaiting_date_selection",
-                 "driver_awaiting_time_selection", "traveler_awaiting_time_selection"):
-        await update.message.reply_text("⬆️ Please use the inline buttons above to select.")
+                 "driver_awaiting_time_selection", "traveler_awaiting_time_selection",
+                 "driver_awaiting_seats", "traveler_awaiting_passengers"):
+        await update.message.reply_text(
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✦  USE BUTTONS  ✦\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "⬆️ Please use the inline buttons above.\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━"
+        )
         return
 
     lang = _lang(context)
@@ -160,6 +166,9 @@ async def callback_dispatcher(update: Update, context: ContextTypes.DEFAULT_TYPE
     if data.startswith("select_hour:"):
         return await select_hour_callback(update, context)
 
+    if data.startswith("pick_num:"):
+        return await pick_num_callback(update, context)
+
     if data.startswith("reserve:"):
         return await reservation_callback(update, context)
     if data.startswith("res_approve:") or data.startswith("res_reject:"):
@@ -171,6 +180,51 @@ async def callback_dispatcher(update: Update, context: ContextTypes.DEFAULT_TYPE
         return await stars_callback(update, context)
 
     await update.callback_query.answer()
+
+
+async def pick_num_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle number picker selection for seats/passengers."""
+    query = update.callback_query
+    await query.answer()
+
+    parts = query.data.split(":")
+    if len(parts) != 2:
+        return
+    try:
+        num = int(parts[1])
+        if not (1 <= num <= 7):
+            raise ValueError
+    except (ValueError, IndexError):
+        await query.answer(text="❌ Invalid selection", show_alert=True)
+        return
+
+    state = context.user_data.get("state")
+    user = update.effective_user
+
+    async def send_msg(text, reply_markup=None):
+        await context.bot.send_message(
+            chat_id=user.id, text=text,
+            parse_mode="Markdown", reply_markup=reply_markup,
+        )
+
+    # Remove the inline keyboard
+    await query.edit_message_text(
+        text=query.message.text + f"\n\n━━━━━━━━━━━━━━━━━━━━━━\n✅ Selected: *{num}*\n━━━━━━━━━━━━━━━━━━━━━━",
+        parse_mode="Markdown",
+    )
+
+    if state == "driver_awaiting_seats":
+        await process_driver_seats(num, user.id, user.first_name, context, send_msg)
+    elif state == "traveler_awaiting_passengers":
+        await process_traveler_passengers(num, user.id, context, send_msg)
+    else:
+        await send_msg(
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✦  ERROR ❌  ✦\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "Unexpected state. Use /start to begin again.\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━"
+        )
 
 
 async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -190,6 +244,13 @@ async def cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         logger.info("Cleanup: removed %d expired ride(s).", deleted)
 
 
+async def post_init(application: Application) -> None:
+    """Set the bot menu button with /start command."""
+    await application.bot.set_my_commands([
+        BotCommand("start", "Open main menu"),
+    ])
+
+
 def main() -> None:
     init_db()
 
@@ -202,7 +263,7 @@ def main() -> None:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("cancel", cancel_command))

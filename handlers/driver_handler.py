@@ -59,22 +59,35 @@ async def my_trips_driver(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.message.reply_text(t("no_active_posts", lang))
         return
 
-    lines = ["📋 *Your posted rides:*\n"]
+    lines = [
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "✦  YOUR POSTED RIDES  ✦\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+    ]
     for r in rides:
         try:
             dd = datetime.strptime(r["date"], "%Y-%m-%d").strftime("%d %B %Y")
         except ValueError:
             dd = r["date"]
         reservations = get_ride_reservations(r["id"])
-        approved = sum(1 for rv in reservations if rv["status"] == "approved")
-        pending = sum(1 for rv in reservations if rv["status"] == "pending")
+        approved_list = [rv for rv in reservations if rv["status"] == "approved"]
+        pending_list = [rv for rv in reservations if rv["status"] == "pending"]
         lines.append(
             f"🚗 *{r['route']}*\n"
-            f" 📅 {dd} ⏰ {r['time']}\n"
-            f" 💺 {r['seats_available']}/{r['seats_total']} seats left\n"
-            f" ✅ {approved} approved · ⏳ {pending} pending\n"
-            f" /delete\\_{r['id']}\n"
+            f"  📅 {dd}  ⏰ {r['time']}\n"
+            f"  💺 {r['seats_available']}/{r['seats_total']} seats left\n"
+            f"  ✅ {len(approved_list)} approved · ⏳ {len(pending_list)} pending\n"
         )
+        for rv in approved_list:
+            tname = rv.get('traveler_name') or 'Traveler'
+            tid = rv.get('traveler_id', 0)
+            lines.append(f"    ✅ [{tname}](tg://user?id={tid}) ({rv['seats_reserved']} seat)\n")
+        for rv in pending_list:
+            tname = rv.get('traveler_name') or 'Traveler'
+            tid = rv.get('traveler_id', 0)
+            lines.append(f"    ⏳ [{tname}](tg://user?id={tid}) ({rv['seats_reserved']} seat)\n")
+        lines.append(f"  /delete\\_{r['id']}\n")
+    lines.append("━━━━━━━━━━━━━━━━━━━━━━")
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
 
@@ -150,19 +163,19 @@ async def handle_driver_time(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def handle_driver_seats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = update.message.text.strip()
-    lang = _lang(context)
-    if not text.isdigit() or not (1 <= int(text) <= 10):
-        await update.message.reply_text(t("number_1_10", lang))
-        return
+    """Deprecated — seats now selected via inline number picker."""
+    pass
 
-    seats = int(text)
-    user = update.effective_user
-    user_id = user.id
-    name = user.first_name or "Driver"
+
+async def process_driver_seats(seats: int, user_id: int, user_first_name: str,
+                                context: ContextTypes.DEFAULT_TYPE,
+                                send_message) -> None:
+    """Process seat selection (called from pick_num callback)."""
+    name = user_first_name or "Driver"
+    lang = _lang(context)
 
     if not can_post(user_id):
-        await update.message.reply_text(t("spam_limit", lang))
+        await send_message(t("spam_limit", lang))
         _clear_state(context)
         return
 
@@ -171,7 +184,13 @@ async def handle_driver_seats(update: Update, context: ContextTypes.DEFAULT_TYPE
     time_val = context.user_data.get("time")
 
     if not all([route, date, time_val]):
-        await update.message.reply_text("❌ Error: Missing ride data. Please try again.")
+        await send_message(
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✦  ERROR ❌  ✦\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "Missing ride data. Please try again.\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━"
+        )
         _clear_state(context)
         return
 
@@ -182,19 +201,22 @@ async def handle_driver_seats(update: Update, context: ContextTypes.DEFAULT_TYPE
     avg = get_driver_avg_rating(user_id)
     rating_str = f"⭐ {avg}/5" if avg else "No ratings yet"
 
-    await update.message.reply_text(
-        f"✅ Ride posted!\n\n"
-        f"🚗 Driver: {name}\n"
+    await send_message(
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"✦  RIDE POSTED ✅  ✦\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"🚗 Driver: [{name}](tg://user?id={user_id})\n"
         f"📍 Route: {route}\n"
         f"📅 Date: {display_date}\n"
         f"⏰ Time: {time_val}\n"
         f"💺 Seats: {seats}\n"
         f"Rating: {rating_str}\n\n"
-        f"Travelers can find your ride now.",
-        parse_mode="Markdown",
+        f"Travelers can find your ride now.\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━",
     )
 
     await notify_travelers_of_new_ride(
         context, route, date, name, display_date, time_val, seats,
+        driver_id=user_id,
     )
     _clear_state(context)
