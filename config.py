@@ -45,7 +45,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "welcome": {
         "en": (
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  MECCA<>MEDINA  ✦\n"
+            "✦  MECCA <> MEDINA  ✦\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n\n"
             "🚗 Find drivers & travelers\n"
             "between Mecca and Medina.\n\n"
@@ -53,43 +53,43 @@ TEXTS: dict[str, dict[str, str]] = {
         ),
         "ar": (
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  RIDEMATCH  ✦\n"
+            "✦  MECCA <> MEDINA  ✦\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🚗 تطابق السائقين والمسافرين\n"
+            "🚗 ابحث عن سائقين ومسافرين\n"
             "بين مكة والمدينة.\n\n"
-            "اختر من الخيارات أدناه:"
+            "اختر أحد الخيارات أدناه:"
         ),
         "de": (
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  RIDEMATCH  ✦\n"
+            "✦  MECCA <> MEDINA  ✦\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🚗 Fahrer & Reisende verbinden\n"
-            "zwischen Makkah und Madinah.\n\n"
-            "Wähle eine Option:"
+            "🚗 Finde Fahrer und Mitreisende\n"
+            "zzwischen Mekka und Medina.\n\n"
+            "Wähle eine Option unten:"
         ),
         "fr": (
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  RIDEMATCH  ✦\n"
+            "✦  MECCA <> MEDINA  ✦\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🚗 Connecter conducteurs & voyageurs\n"
+            "🚗 ConTrouvez des conducteurs et passagers\n"
             "entre La Mecque et Médine.\n\n"
-            "Choisissez une option :"
+            "Choisissez une option ci-dessous :"
         ),
         "ru": (
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  RIDEMATCH  ✦\n"
+            "✦  MECCA <> MEDINA  ✦\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🚗 Связь водителей и попутчиков\n"
+            "🚗 Найдите водителей и попутчиков\n"
             "между Меккой и Мединой.\n\n"
-            "Выберите опцию:"
+            "Выберите опцию ниже:"
         ),
         "uz": (
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  RIDEMATCH  ✦\n"
+            "✦  MECCA <> MEDINA  ✦\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🚗 Haydovchilar va sayohatchilarni\n"
-            "Makka va Madina oʻrtasida ulang.\n\n"
-            "Quyidagi variantni tanlang:"
+            "🚗 Makka va Madina o‘rtasida\n"
+            "Makkahaydovchilar va yo‘lovchilarni toping.\n\n"
+            "Quyidagi variantlardan birini tanlang:"
         ),
     },
     "choose_lang": {
