@@ -91,23 +91,23 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     text = update.message.text.strip()
 
     # ── Main menu button handling (works from any state) ──
-    if text == "🚗 Find Ride":
+    if text == "� I need a Ride":
         _clear_state(context)
         context.user_data["role"] = "traveler"
         context.user_data["state"] = "traveler_awaiting_route"
         lang = _lang(context)
         await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
         return
-    if text == "🚙 Offer Ride":
+    if text == "🚙 I need a Passenger":
         _clear_state(context)
         context.user_data["role"] = "driver"
         context.user_data["state"] = "driver_awaiting_route"
         lang = _lang(context)
         await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
         return
-    if text == "📅 My Trips":
+    if text == "📅 My Adventures":
         return await my_trips_command(update, context)
-    if text == "📍 Share Location":
+    if text == "📍 Drop My Pin":
         lang = _lang(context)
         await update.message.reply_text(t("location_saved", lang), reply_markup=main_menu_keyboard(lang))
         return
@@ -118,7 +118,7 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             reply_markup=LANG_KEYBOARD,
         )
         return
-    if text == "🙋🏻‍♂️ Help":
+    if text == "🆘 Help":
         lang = _lang(context)
         await update.message.reply_text(
             t("help_text", lang),

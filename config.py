@@ -265,30 +265,30 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "help_text": {
         "en": (
-            "🙋🏻‍♂️ *RideMatch Help*\n\n"
-            "🚗 *Find Ride* — Search for available rides\n"
-            "🚙 *Offer Ride* — Post a ride as a driver\n"
-            "📍 *Share Location* — Share your location for better matching\n"
+            "🆘 *RideMatch Help*\n\n"
+            "🙋 *I need a Ride* — Search for available rides\n"
+            "🚙 *I need a Passenger* — Post a ride as a driver\n"
+            "📍 *Drop My Pin* — Share your location for better matching\n"
             "🌍 *Language* — Change your language\n"
-            "📅 *My Trips* — View your rides and reservations\n\n"
+            "📅 *My Adventures* — View your rides and reservations\n\n"
             "Need more help? Use /report to contact admins."
         ),
         "ar": (
-            "🙋🏻‍♂️ *مساعدة RideMatch*\n\n"
-            "🚗 *البحث عن رحلة* — ابحث عن الرحلات المتاحة\n"
-            "🚙 *عرض رحلة* — انشر رحلة كسائق\n"
-            "📍 *مشاركة الموقع* — شارك موقعك لمطابقة أفضل\n"
+            "🆘 *مساعدة RideMatch*\n\n"
+            "🙋 *أحتاج سواري* — ابحث عن الرحلات المتاحة\n"
+            "🚙 *أحتاج راكب* — انشر رحلة كسائق\n"
+            "📍 *حدد موقعي* — شارك موقعك لمطابقة أفضل\n"
             "🌍 *اللغة* — غير لغتك\n"
-            "📅 *رحلاتي* — عرض رحلاتك وحجوزاتك\n\n"
+            "📅 *مغامراتي* — عرض رحلاتك وحجوزاتك\n\n"
             "تحتاج مزيد من المساعدة؟ استخدم /report للتواصل مع المشرفين."
         ),
         "ur": (
-            "🙋🏻‍♂️ *RideMatch مدد*\n\n"
-            "🚗 *سواری تلاش کریں* — دستیاب سواریاں تلاش کریں\n"
-            "🚙 *سواری پیش کریں* — بطور ڈرائیور سواری شائع کریں\n"
-            "📍 *مقام شیئر کریں* — بہتر مماثلت کے لیے اپنا مقام شیئر کریں\n"
+            "🆘 *RideMatch مدد*\n\n"
+            "🙋 *مجھے سواری چاہیے* — دستیاب سواریاں تلاش کریں\n"
+            "🚙 *مجھے سوار چاہیے* — بطور ڈرائیور سواری شائع کریں\n"
+            "📍 *میرا پن ڈراپ کریں* — بہتر مماثلت کے لیے اپنا مقام شیئر کریں\n"
             "🌍 *زبان* — اپنی زبان تبدیل کریں\n"
-            "📅 *میرے سفر* — اپنی سواریاں اور ریزرویشنز دیکھیں\n\n"
+            "📅 *میرے ماجرے* — اپنی سواریاں اور ریزرویشنز دیکھیں\n\n"
             "مزید مدد چاہیے؟ /report استعمال کریں ایڈمنز سے رابطہ کرنے کے لیے۔"
         ),
     },
