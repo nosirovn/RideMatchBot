@@ -40,8 +40,6 @@ from handlers.driver_handler import (
     available_command,
     delete_command,
     handle_driver_route,
-    handle_driver_date,
-    handle_driver_time,
     handle_driver_seats,
     my_trips_driver,
 )
@@ -51,7 +49,6 @@ from handlers.traveler_handler import (
     report_command,
     handle_report_text,
     handle_traveler_route,
-    handle_traveler_date,
     handle_traveler_passengers,
     reservation_callback,
     reservation_decision_callback,
@@ -91,7 +88,7 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     text = update.message.text.strip()
 
     # ── Main menu button handling (works from any state) ──
-    if text == "� I need a Ride":
+    if text == "🙋🏻‍♂️ I need a Ride":
         _clear_state(context)
         context.user_data["role"] = "traveler"
         context.user_data["state"] = "traveler_awaiting_route"
@@ -127,26 +124,24 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         return
 
-    if state == "driver_awaiting_route" or (state == "awaiting_route" and context.user_data.get("role") == "driver"):
-        context.user_data["state"] = "driver_awaiting_route"
+    if state == "driver_awaiting_route":
         return await handle_driver_route(update, context)
-    if state == "driver_awaiting_date":
-        return await handle_driver_date(update, context)
-    if state == "driver_awaiting_time":
-        return await handle_driver_time(update, context)
     if state == "driver_awaiting_seats":
         return await handle_driver_seats(update, context)
 
-    if state == "traveler_awaiting_route" or (state == "awaiting_route" and context.user_data.get("role") == "traveler"):
-        context.user_data["state"] = "traveler_awaiting_route"
+    if state == "traveler_awaiting_route":
         return await handle_traveler_route(update, context)
-    if state == "traveler_awaiting_date":
-        return await handle_traveler_date(update, context)
     if state == "traveler_awaiting_passengers":
         return await handle_traveler_passengers(update, context)
 
     if state == "awaiting_report_text":
         return await handle_report_text(update, context)
+
+    # Calendar/hour picker is active — remind user to use the inline buttons
+    if state in ("driver_awaiting_date_selection", "traveler_awaiting_date_selection",
+                 "driver_awaiting_time_selection", "traveler_awaiting_time_selection"):
+        await update.message.reply_text("⬆️ Please use the inline buttons above to select.")
+        return
 
     lang = _lang(context)
     await update.message.reply_text(t("idle_hint", lang), reply_markup=main_menu_keyboard(lang))

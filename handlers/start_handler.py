@@ -45,7 +45,7 @@ LANG_KEYBOARD = InlineKeyboardMarkup([
 def main_menu_keyboard(lang: str = "en") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         [
-            ["� I need a Ride", KeyboardButton("📍 Drop My Pin", request_location=True)],
+            ["🙋🏻‍♂️ I need a Ride", KeyboardButton("📍 Drop My Pin", request_location=True)],
             ["🚙 I need a Passenger", "🌍 Language"],
             ["📅 My Adventures", "🆘 Help"],
         ],

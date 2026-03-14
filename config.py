@@ -266,7 +266,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "help_text": {
         "en": (
             "🆘 *RideMatch Help*\n\n"
-            "🙋 *I need a Ride* — Search for available rides\n"
+            "🙋🏻‍♂️ *I need a Ride* — Search for available rides\n"
             "🚙 *I need a Passenger* — Post a ride as a driver\n"
             "📍 *Drop My Pin* — Share your location for better matching\n"
             "🌍 *Language* — Change your language\n"
@@ -275,7 +275,7 @@ TEXTS: dict[str, dict[str, str]] = {
         ),
         "ar": (
             "🆘 *مساعدة RideMatch*\n\n"
-            "🙋 *أحتاج سواري* — ابحث عن الرحلات المتاحة\n"
+            "🙋🏻‍♂️ *أحتاج سواري* — ابحث عن الرحلات المتاحة\n"
             "🚙 *أحتاج راكب* — انشر رحلة كسائق\n"
             "📍 *حدد موقعي* — شارك موقعك لمطابقة أفضل\n"
             "🌍 *اللغة* — غير لغتك\n"
@@ -284,7 +284,7 @@ TEXTS: dict[str, dict[str, str]] = {
         ),
         "ur": (
             "🆘 *RideMatch مدد*\n\n"
-            "🙋 *مجھے سواری چاہیے* — دستیاب سواریاں تلاش کریں\n"
+            "🙋🏻‍♂️ *مجھے سواری چاہیے* — دستیاب سواریاں تلاش کریں\n"
             "🚙 *مجھے سوار چاہیے* — بطور ڈرائیور سواری شائع کریں\n"
             "📍 *میرا پن ڈراپ کریں* — بہتر مماثلت کے لیے اپنا مقام شیئر کریں\n"
             "🌍 *زبان* — اپنی زبان تبدیل کریں\n"

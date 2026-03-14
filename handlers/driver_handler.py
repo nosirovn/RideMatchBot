@@ -37,7 +37,7 @@ async def post_driver_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     _clear_state(context)
-    context.user_data["state"] = "awaiting_role"
+    context.user_data["state"] = "driver_awaiting_route"
     context.user_data["role"] = "driver"
     lang = _lang(context)
     await update.message.reply_text(
