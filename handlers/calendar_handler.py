@@ -129,7 +129,11 @@ async def select_day_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     date_str = f"{year:04d}-{month:02d}-{day:02d}"
     context.user_data["date"] = date_str
-    context.user_data["state"] = "driver_awaiting_time_selection"
+    role = context.user_data.get("role", "driver")
+    if role == "traveler":
+        context.user_data["state"] = "traveler_awaiting_time_selection"
+    else:
+        context.user_data["state"] = "driver_awaiting_time_selection"
 
     display_date = date_obj.strftime("%d %B %Y")
 
@@ -167,7 +171,6 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
     time_str = f"{hour:02d}:00"
     context.user_data["time"] = time_str
-    context.user_data["state"] = "driver_awaiting_seats"
 
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
@@ -176,9 +179,19 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         display_date = date_str
 
     lang = _lang(context)
+    role = context.user_data.get("role", "driver")
 
-    await query.edit_message_text(
-        text=f"✅ Time selected: {time_str}\n"
-             f"📅 {display_date} ⏰ {time_str}\n\n"
-             f"Enter number of seats (1-10):"
-    )
+    if role == "traveler":
+        context.user_data["state"] = "traveler_awaiting_passengers"
+        await query.edit_message_text(
+            text=f"✅ Time selected: {time_str}\n"
+                 f"📅 {display_date} ⏰ {time_str}\n\n"
+                 f"{t('enter_passengers', lang)}"
+        )
+    else:
+        context.user_data["state"] = "driver_awaiting_seats"
+        await query.edit_message_text(
+            text=f"✅ Time selected: {time_str}\n"
+                 f"📅 {display_date} ⏰ {time_str}\n\n"
+                 f"{t('enter_seats', lang)}"
+        )

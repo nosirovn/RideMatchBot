@@ -46,17 +46,17 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": (
             "Welcome to RideMatch 🚗\n"
             "Match drivers and travelers between Makkah and Madinah.\n\n"
-            "Choose your role:"
+            "Choose an option below:"
         ),
         "ar": (
             "مرحبًا بك في RideMatch 🚗\n"
             "تطابق السائقين والمسافرين بين مكة والمدينة.\n\n"
-            "اختر دورك:"
+            "اختر من الخيارات أدناه:"
         ),
         "ur": (
             "RideMatch میں خوش آمدید 🚗\n"
             "مکہ اور مدینہ کے درمیان ڈرائیوروں اور مسافروں کو ملائیں۔\n\n"
-            "اپنا کردار منتخب کریں:"
+            "نیچے سے ایک آپشن منتخب کریں:"
         ),
     },
     "choose_lang": {
@@ -145,9 +145,14 @@ TEXTS: dict[str, dict[str, str]] = {
         "ur": "1 سے 10 کے درمیان نمبر درج کریں:",
     },
     "choose_role_btn": {
-        "en": "Please choose a role using the buttons below.",
-        "ar": "اختر دورًا باستخدام الأزرار أدناه.",
-        "ur": "نیچے دیے گئے بٹنوں سے اپنا کردار منتخب کریں۔",
+        "en": "Please choose an option using the buttons below.",
+        "ar": "اختر خيارًا باستخدام الأزرار أدناه.",
+        "ur": "نیچے دیے گئے بٹنوں سے ایک آپشن منتخب کریں۔",
+    },
+    "location_saved": {
+        "en": "📍 Location saved! This helps match you with nearby drivers.",
+        "ar": "📍 تم حفظ الموقع! هذا يساعد في مطابقتك مع السائقين القريبين.",
+        "ur": "📍 مقام محفوظ ہوگیا! اس سے قریبی ڈرائیوروں سے مماثلت میں مدد ملے گی۔",
     },
     "choose_route_btn": {
         "en": "Please select a valid route using the buttons.",
@@ -172,7 +177,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "new_ride_notif": {
         "en": (
             "🔔 *New ride available!*\n\n"
-            "🚗 Driver: @{username}\n"
+            "🚗 Driver: {name}\n"
             "📍 Route: {route}\n"
             "📅 Date: {date}\n"
             "⏰ Time: {time}\n"
@@ -181,7 +186,7 @@ TEXTS: dict[str, dict[str, str]] = {
         ),
         "ar": (
             "🔔 *رحلة جديدة متاحة!*\n\n"
-            "🚗 السائق: @{username}\n"
+            "🚗 السائق: {name}\n"
             "📍 المسار: {route}\n"
             "📅 التاريخ: {date}\n"
             "⏰ الوقت: {time}\n"
@@ -190,7 +195,7 @@ TEXTS: dict[str, dict[str, str]] = {
         ),
         "ur": (
             "🔔 *نئی سواری دستیاب!*\n\n"
-            "🚗 ڈرائیور: @{username}\n"
+            "🚗 ڈرائیور: {name}\n"
             "📍 راستہ: {route}\n"
             "📅 تاریخ: {date}\n"
             "⏰ وقت: {time}\n"
@@ -199,14 +204,14 @@ TEXTS: dict[str, dict[str, str]] = {
         ),
     },
     "reservation_request": {
-        "en": "🔔 *Seat reservation request*\n\nTraveler: @{traveler}\nRoute: {route}\nDate: {date}\nSeats requested: {seats}",
-        "ar": "🔔 *طلب حجز مقعد*\n\nالمسافر: @{traveler}\nالمسار: {route}\nالتاريخ: {date}\nالمقاعد المطلوبة: {seats}",
-        "ur": "🔔 *سیٹ ریزرویشن کی درخواست*\n\nمسافر: @{traveler}\nراستہ: {route}\nتاریخ: {date}\nمطلوبہ سیٹیں: {seats}",
+        "en": "🔔 *Seat reservation request*\n\nTraveler: {traveler}\nRoute: {route}\nDate: {date}\nSeats requested: {seats}",
+        "ar": "🔔 *طلب حجز مقعد*\n\nالمسافر: {traveler}\nالمسار: {route}\nالتاريخ: {date}\nالمقاعد المطلوبة: {seats}",
+        "ur": "🔔 *سیٹ ریزرویشن کی درخواست*\n\nمسافر: {traveler}\nراستہ: {route}\nتاریخ: {date}\nمطلوبہ سیٹیں: {seats}",
     },
     "reservation_approved": {
-        "en": "✅ Your reservation has been *approved*!\n\nDriver: @{driver}\nRoute: {route}\nDate: {date}\nTime: {time}",
-        "ar": "✅ تمت *الموافقة* على حجزك!\n\nالسائق: @{driver}\nالمسار: {route}\nالتاريخ: {date}\nالوقت: {time}",
-        "ur": "✅ آپ کی ریزرویشن *منظور* ہوگئی!\n\nڈرائیور: @{driver}\nراستہ: {route}\nتاریخ: {date}\nوقت: {time}",
+        "en": "✅ Your reservation has been *approved*!\n\nDriver: {driver}\nRoute: {route}\nDate: {date}\nTime: {time}",
+        "ar": "✅ تمت *الموافقة* على حجزك!\n\nالسائق: {driver}\nالمسار: {route}\nالتاريخ: {date}\nالوقت: {time}",
+        "ur": "✅ آپ کی ریزرویشن *منظور* ہوگئی!\n\nڈرائیور: {driver}\nراستہ: {route}\nتاریخ: {date}\nوقت: {time}",
     },
     "reservation_rejected": {
         "en": "❌ Your reservation was *rejected* by the driver.",
@@ -257,6 +262,11 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Use /start to begin, /post_driver to offer a ride, or /find_ride to search.",
         "ar": "استخدم /start للبدء، /post_driver لعرض رحلة، أو /find_ride للبحث.",
         "ur": "/start شروع کرنے کے لیے، /post_driver سواری پیش کرنے کے لیے، /find_ride تلاش کرنے کے لیے۔",
+    },
+    "no_reservations": {
+        "en": "📋 You have no trip reservations.",
+        "ar": "📋 ليس لديك حجوزات.",
+        "ur": "📋 آپ کی کوئی ریزرویشن نہیں۔",
     },
 }
 

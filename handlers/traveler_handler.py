@@ -39,6 +39,7 @@ from handlers.start_handler import (
     route_keyboard, DATE_PATTERN,
     _lang, _clear_state,
 )
+from handlers.calendar_handler import create_calendar_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ logger = logging.getLogger(__name__)
 async def find_ride_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start the traveler search flow."""
     user = update.effective_user
-    upsert_user(user.id, user.username)
+    upsert_user(user.id, user.first_name)
 
     if is_user_blocked(user.id):
         await update.message.reply_text(t("blocked_user", _lang(context)))
@@ -75,30 +76,19 @@ async def handle_traveler_route(update: Update, context: ContextTypes.DEFAULT_TY
         )
         return
     context.user_data["route"] = text
-    context.user_data["state"] = "traveler_awaiting_date"
-    await update.message.reply_text(t("enter_date", lang))
+    context.user_data["state"] = "traveler_awaiting_date_selection"
+
+    now = datetime.utcnow()
+    keyboard = create_calendar_keyboard(now.year, now.month)
+    await update.message.reply_text(
+        "📅 Select your travel date:",
+        reply_markup=keyboard,
+    )
 
 
 async def handle_traveler_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Traveler enters date as DD/MM/YYYY."""
-    text = update.message.text.strip()
-    lang = _lang(context)
-    m = DATE_PATTERN.match(text)
-    if not m:
-        await update.message.reply_text(t("invalid_date", lang))
-        return
-    day, month, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
-    try:
-        date_obj = datetime(year, month, day).date()
-    except ValueError:
-        await update.message.reply_text(t("invalid_date", lang))
-        return
-    if date_obj < datetime.utcnow().date():
-        await update.message.reply_text(t("past_date", lang))
-        return
-    context.user_data["date"] = date_obj.strftime("%Y-%m-%d")
-    context.user_data["state"] = "traveler_awaiting_passengers"
-    await update.message.reply_text(t("enter_passengers", lang))
+    """Deprecated - date selection now via calendar_handler."""
+    pass
 
 
 async def handle_traveler_passengers(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -113,8 +103,9 @@ async def handle_traveler_passengers(update: Update, context: ContextTypes.DEFAU
     context.user_data["passengers"] = passengers
     route = context.user_data.get("route")
     date = context.user_data.get("date")
+    preferred_time = context.user_data.get("time")
 
-    rides = rank_rides(route, date, passengers)
+    rides = rank_rides(route, date, passengers, preferred_time=preferred_time)
     save_search_request(update.effective_user.id, route, date, passengers)
     log_event("search", update.effective_user.id, route)
 
@@ -135,11 +126,11 @@ async def handle_traveler_passengers(update: Update, context: ContextTypes.DEFAU
         avg = r.get("avg_rating", 0)
         rating_str = f" ⭐{avg}" if avg else ""
         msg += (
-            f"\n🚗 @{r['username']} — {time_str}"
+            f"\n🚗 {r['username']} — {time_str}"
             f"\n💺 {r['seats_available']} seats{rating_str}\n"
         )
         buttons.append([InlineKeyboardButton(
-            f"Reserve @{r['username']} ({time_str})",
+            f"Reserve {r['username']} ({time_str})",
             callback_data=f"reserve:{r['id']}"
         )])
 
@@ -175,7 +166,7 @@ async def reservation_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await notify_driver_reservation(
         context, ride["driver_id"], res_id,
-        user.username or "user", ride["route"], display_date, passengers,
+        user.first_name or "Traveler", ride["route"], display_date, passengers,
     )
 
 
@@ -299,7 +290,7 @@ async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
             lines.append(
                 f"{status_icon} {res['route']} — {res['date']}\n"
-                f"   Driver: @{res.get('driver_username', '?')} | Status: {res['status']}\n"
+                f"   Driver: {res.get('driver_username', '?')} | Status: {res['status']}\n"
             )
 
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
@@ -322,3 +313,24 @@ async def handle_report_text(update: Update, context: ContextTypes.DEFAULT_TYPE)
     save_report(user.id, None, None, report_text)
     await update.message.reply_text(t("report_saved", lang))
     _clear_state(context)
+
+
+async def my_trips_traveler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show traveler's reservations only."""
+    user = update.effective_user
+    lang = _lang(context)
+    reservations = get_user_reservations(user.id)
+
+    if not reservations:
+        await update.message.reply_text(t("no_reservations", lang))
+        return
+
+    lines = ["📋 *Your trip reservations:*\n"]
+    for res in reservations:
+        status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
+        lines.append(
+            f"{status_icon} {res['route']} — {res['date']}\n"
+            f"   Driver: {res.get('driver_username', '?')} | Status: {res['status']}\n"
+        )
+
+    await update.message.reply_text("\n".join(lines), parse_mode="Markdown")

@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 async def notify_travelers_of_new_ride(
     context: ContextTypes.DEFAULT_TYPE,
     route: str, date: str,
-    driver_username: str, display_date: str,
+    driver_name: str, display_date: str,
     time_val: str, seats: int,
 ) -> None:
     """Notify travelers whose saved search matches the new ride."""
@@ -38,7 +38,7 @@ async def notify_travelers_of_new_ride(
         lang = get_user_lang(uid)
         msg = t(
             "new_ride_notif", lang,
-            username=driver_username, route=route,
+            name=driver_name, route=route,
             date=display_date, time=time_val, seats=seats,
         )
         try:
@@ -51,14 +51,14 @@ async def notify_driver_reservation(
     context: ContextTypes.DEFAULT_TYPE,
     driver_id: int,
     reservation_id: int,
-    traveler_username: str,
+    traveler_name: str,
     route: str, display_date: str, seats: int,
 ) -> None:
     """Send reservation request to driver with Approve/Reject buttons."""
     lang = get_user_lang(driver_id)
     text = t(
         "reservation_request", lang,
-        traveler=traveler_username, route=route,
+        traveler=traveler_name, route=route,
         date=display_date, seats=seats,
     )
     keyboard = InlineKeyboardMarkup([

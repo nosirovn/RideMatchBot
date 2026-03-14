@@ -31,7 +31,9 @@ from handlers.start_handler import (
     _lang,
     _clear_state,
     role_keyboard,
+    main_menu_keyboard,
     route_keyboard,
+    LANG_KEYBOARD,
 )
 from handlers.driver_handler import (
     post_driver_command,
@@ -41,6 +43,7 @@ from handlers.driver_handler import (
     handle_driver_date,
     handle_driver_time,
     handle_driver_seats,
+    my_trips_driver,
 )
 from handlers.traveler_handler import (
     find_ride_command,
@@ -54,6 +57,7 @@ from handlers.traveler_handler import (
     reservation_decision_callback,
     rate_callback,
     stars_callback,
+    my_trips_traveler,
 )
 from handlers.admin_handler import (
     admin_stats_command,
@@ -86,20 +90,26 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     state = context.user_data.get("state")
     text = update.message.text.strip()
 
-    if state == "awaiting_role":
-        if text == "🚗 Driver":
-            context.user_data["role"] = "driver"
-            context.user_data["state"] = "driver_awaiting_route"
-            lang = _lang(context)
-            await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
-        elif text == "🧍 Traveler":
-            context.user_data["role"] = "traveler"
-            context.user_data["state"] = "traveler_awaiting_route"
-            lang = _lang(context)
-            await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
-        else:
-            lang = _lang(context)
-            await update.message.reply_text(t("choose_role_btn", lang), reply_markup=role_keyboard(lang))
+    # ── Main menu button handling (works from any state) ──
+    if text == "🚗 Find Ride":
+        _clear_state(context)
+        context.user_data["role"] = "traveler"
+        context.user_data["state"] = "traveler_awaiting_route"
+        lang = _lang(context)
+        await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
+        return
+    if text == "🚙 Offer Ride":
+        _clear_state(context)
+        context.user_data["role"] = "driver"
+        context.user_data["state"] = "driver_awaiting_route"
+        lang = _lang(context)
+        await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
+        return
+    if text == "📅 My Trips":
+        return await my_trips_command(update, context)
+    if text == "📍 Share Location":
+        lang = _lang(context)
+        await update.message.reply_text(t("location_saved", lang), reply_markup=main_menu_keyboard(lang))
         return
 
     if state == "driver_awaiting_route" or (state == "awaiting_route" and context.user_data.get("role") == "driver"):
@@ -124,7 +134,7 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return await handle_report_text(update, context)
 
     lang = _lang(context)
-    await update.message.reply_text(t("idle_hint", lang))
+    await update.message.reply_text(t("idle_hint", lang), reply_markup=main_menu_keyboard(lang))
 
 
 async def callback_dispatcher(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -157,7 +167,11 @@ async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     loc = update.message.location
     if loc:
         set_user_location(update.effective_user.id, loc.latitude, loc.longitude)
-        await update.message.reply_text("📍 Location saved!")
+        lang = _lang(context)
+        await update.message.reply_text(
+            t("location_saved", lang),
+            reply_markup=main_menu_keyboard(lang),
+        )
 
 
 async def cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:

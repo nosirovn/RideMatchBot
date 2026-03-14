@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 async def post_driver_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    upsert_user(user.id, user.username)
+    upsert_user(user.id, user.first_name)
     if is_user_blocked(user.id):
         await update.message.reply_text(t("blocked_user", _lang(context)))
         return
@@ -157,7 +157,7 @@ async def handle_driver_seats(update: Update, context: ContextTypes.DEFAULT_TYPE
     seats = int(text)
     user = update.effective_user
     user_id = user.id
-    username = user.username or "no_username"
+    name = user.first_name or "Driver"
 
     if not can_post(user_id):
         await update.message.reply_text(t("spam_limit", lang))
@@ -173,7 +173,7 @@ async def handle_driver_seats(update: Update, context: ContextTypes.DEFAULT_TYPE
         _clear_state(context)
         return
 
-    ride_id = add_ride(user_id, username, route, date, time_val, seats)
+    ride_id = add_ride(user_id, name, route, date, time_val, seats)
     log_event("ride_posted", user_id, route)
 
     display_date = datetime.strptime(date, "%Y-%m-%d").strftime("%d %B %Y")
@@ -182,7 +182,7 @@ async def handle_driver_seats(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     await update.message.reply_text(
         f"✅ Ride posted!\n\n"
-        f"🚗 Driver: @{username}\n"
+        f"🚗 Driver: {name}\n"
         f"📍 Route: {route}\n"
         f"📅 Date: {display_date}\n"
         f"⏰ Time: {time_val}\n"
@@ -193,6 +193,6 @@ async def handle_driver_seats(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
 
     await notify_travelers_of_new_ride(
-        context, route, date, username, display_date, time_val, seats,
+        context, route, date, name, display_date, time_val, seats,
     )
     _clear_state(context)

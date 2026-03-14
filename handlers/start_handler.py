@@ -16,6 +16,7 @@ from telegram import (
     ReplyKeyboardRemove,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    KeyboardButton,
 )
 from telegram.ext import ContextTypes
 
@@ -41,12 +42,22 @@ LANG_KEYBOARD = InlineKeyboardMarkup([
 ])
 
 
-def role_keyboard(lang: str) -> ReplyKeyboardMarkup:
+def main_menu_keyboard(lang: str = "en") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        [["🚗 Driver", "🧍 Traveler"]],
+        [
+            ["🚗 Find Ride"],
+            ["🚙 Offer Ride"],
+            [KeyboardButton("📍 Share Location", request_location=True)],
+            ["📅 My Trips"],
+        ],
         resize_keyboard=True,
-        one_time_keyboard=True,
+        one_time_keyboard=False,
     )
+
+
+def role_keyboard(lang: str = "en") -> ReplyKeyboardMarkup:
+    """Alias for backward compatibility."""
+    return main_menu_keyboard(lang)
 
 
 def route_keyboard() -> ReplyKeyboardMarkup:
@@ -78,7 +89,7 @@ def _clear_state(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    upsert_user(user.id, user.username)
+    upsert_user(user.id, user.first_name)
     log_event("start", user.id)
 
     if is_user_blocked(user.id):
@@ -115,22 +126,22 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     context.user_data["lang"] = lang
 
     await query.edit_message_text(f"Language set! ✅")
-    # Now show role selection in the chat
+    # Now show main menu in the chat
     await context.bot.send_message(
         chat_id=user_id,
         text=t("welcome", lang),
-        reply_markup=role_keyboard(lang),
+        reply_markup=main_menu_keyboard(lang),
     )
-    context.user_data["state"] = "awaiting_role"
+    context.user_data["state"] = "main_menu"
 
 
 async def _show_role_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     lang = _lang(context)
     await update.message.reply_text(
         t("welcome", lang),
-        reply_markup=role_keyboard(lang),
+        reply_markup=main_menu_keyboard(lang),
     )
-    context.user_data["state"] = "awaiting_role"
+    context.user_data["state"] = "main_menu"
 
 
 # ── /cancel ──────────────────────────────────────────────────
