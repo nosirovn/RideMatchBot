@@ -45,10 +45,10 @@ TEXTS: dict[str, dict[str, str]] = {
     "welcome": {
         "en": (
             "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  RIDEMATCH  ✦\n"
+            "✦  MECCA<>MEDINA  ✦\n"
             "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🚗 Match drivers & travelers\n"
-            "between Makkah and Madinah.\n\n"
+            "🚗 Find drivers & travelers\n"
+            "between Mecca and Medina.\n\n"
             "Choose an option below:"
         ),
         "ar": (
