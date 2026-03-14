@@ -1,5 +1,4 @@
-Page_Down"""
-bot.py — Entry point for the RideMatch Telegram bot.
+"""bot.py — Entry point for the RideMatch Telegram bot.
 Registers all command handlers, callback-query handlers, the text router, 
 location handler, periodic cleanup & completion jobs, and starts long-polling.
 """
