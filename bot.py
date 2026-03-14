@@ -78,7 +78,7 @@ logger = logging.getLogger(__name__)
 async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if not update.message or not update.message.text:
                     return
-    user_id = update.effective_user.id
+        user_id = update.effective_user.id
 if is_user_blocked(user_id):
                 lang = get_user_lang(user_id)
                 await update.message.reply_text(t("blocked_user", lang))
