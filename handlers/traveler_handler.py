@@ -5,7 +5,7 @@ traveler_handler.py – Traveler flow: find ride, reserve seats, rate driver, re
 from __future__ import annotations
 import logging
 import re
-from datetime import import datetime
+from datetime import datetime
 
 from telegram import (
     Update,
