@@ -168,6 +168,15 @@ async def cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 def main() -> None:
     init_db()
+
+        # Fix for Python 3.14+ event loop compatibility
+        try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_closed():
+                                    raise RuntimeError("Event loop is closed")
+        except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start_command))
