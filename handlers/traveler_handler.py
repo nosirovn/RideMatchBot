@@ -36,7 +36,7 @@ from services.notification_service import (
     notify_reservation_result,
 )
 from handlers.start_handler import (
-    route_keyboard, DATE_PATTERN,
+    DATE_PATTERN,
     _lang, _clear_state,
 )
 from handlers.calendar_handler import create_calendar_keyboard
@@ -62,7 +62,7 @@ async def find_ride_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await update.message.reply_text(
         t("traveler_mode", lang),
         parse_mode="Markdown",
-        reply_markup=route_keyboard(),
+        reply_markup=main_menu_keyboard(),
     )
 
 
@@ -72,7 +72,7 @@ async def handle_traveler_route(update: Update, context: ContextTypes.DEFAULT_TY
     lang = _lang(context)
     if text not in ROUTES:
         await update.message.reply_text(
-            t("choose_route_btn", lang), reply_markup=route_keyboard()
+            t("choose_route_btn", lang), reply_markup=main_menu_keyboard()
         )
         return
     context.user_data["route"] = text
