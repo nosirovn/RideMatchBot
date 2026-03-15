@@ -48,11 +48,62 @@ LANG_KEYBOARD = InlineKeyboardMarkup([
 
 
 def main_menu_keyboard(lang: str = "en") -> ReplyKeyboardMarkup:
+    # Get translated button labels
+    texts = {
+        "ride": {
+            "en": "🙋🏻‍♂️ I need a Ride",
+            "ar": "🙋🏻‍♂️ أحتاج سواري",
+            "de": "🙋🏻‍♂️ Ich brauche eine Fahrt",
+            "fr": "🙋🏻‍♂️ J'ai besoin d'un trajet",
+            "ru": "🙋🏻‍♂️ Мне нужна поездка",
+            "uz": "🙋🏻‍♂️ Menga safar kerak",
+        },
+        "pin": {
+            "en": "📍 Drop My Pin",
+            "ar": "📍 حدد موقعي",
+            "de": "📍 Meinen Pin setzen",
+            "fr": "📍 Mon emplacement",
+            "ru": "📍 Мой пин",
+            "uz": "📍 Joylashuvim",
+        },
+        "passenger": {
+            "en": "🚙 I need a Passenger",
+            "ar": "🚙 أحتاج راكب",
+            "de": "🚙 Ich brauche einen Passagier",
+            "fr": "🚙 J'ai besoin d'un passager",
+            "ru": "🚙 Мне нужен пассажир",
+            "uz": "🚙 Menga yoʻlovchi kerak",
+        },
+        "lang": {
+            "en": "🌍 Language",
+            "ar": "🌍 اللغة",
+            "de": "🌍 Sprache",
+            "fr": "🌍 Langue",
+            "ru": "🌍 Язык",
+            "uz": "🌍 Til",
+        },
+        "adventures": {
+            "en": "📅 My Adventures",
+            "ar": "📅 مغامراتي",
+            "de": "📅 Meine Abenteuer",
+            "fr": "📅 Mes aventures",
+            "ru": "📅 Мои приключения",
+            "uz": "📅 Sarguzashtlarim",
+        },
+        "help": {
+            "en": "🆘 Help",
+            "ar": "🆘 مساعدة",
+            "de": "🆘 Hilfe",
+            "fr": "🆘 Aide",
+            "ru": "🆘 Помощь",
+            "uz": "🆘 Yordam",
+        },
+    }
     return ReplyKeyboardMarkup(
         [
-            ["🙋🏻‍♂️ I need a Ride", KeyboardButton("📍 Drop My Pin", request_location=True)],
-            ["🚙 I need a Passenger", "🌍 Language"],
-            ["📅 My Adventures", "🆘 Help"],
+            [texts["ride"].get(lang, texts["ride"]["en"]), KeyboardButton(texts["pin"].get(lang, texts["pin"]["en"]), request_location=True)],
+            [texts["passenger"].get(lang, texts["passenger"]["en"]), texts["lang"].get(lang, texts["lang"]["en"])],
+            [texts["adventures"].get(lang, texts["adventures"]["en"]), texts["help"].get(lang, texts["help"]["en"])],
         ],
         resize_keyboard=True,
         one_time_keyboard=False,
@@ -60,11 +111,20 @@ def main_menu_keyboard(lang: str = "en") -> ReplyKeyboardMarkup:
 
 
 def role_keyboard(lang: str = "en") -> ReplyKeyboardMarkup:
-    """Alias for backward compatibility."""
-    return main_menu_keyboard(lang)
-
-
-def route_keyboard() -> ReplyKeyboardMarkup:
+    routes = {
+        "en": [ROUTE_MK_MD, ROUTE_MD_MK],
+        "ar": ["مكة → المدينة", "المدينة → مكة"],
+        "de": ["Mekka → Medina", "Medina → Mekka"],
+        "fr": ["La Mecque → Médine", "Médine → La Mecque"],
+        "ru": ["Мекка → Медина", "Медина → Мекка"],
+        "uz": ["Makka → Madina", "Madina → Makka"],
+    }
+    r = routes.get(lang, routes["en"])
+    return ReplyKeyboardMarkup(
+        [[r[0]], [r[1]]],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
     return ReplyKeyboardMarkup(
         [[ROUTE_MK_MD], [ROUTE_MD_MK]],
         resize_keyboard=True,
