@@ -33,7 +33,6 @@ from handlers.start_handler import (
     _clear_state,
     role_keyboard,
     main_menu_keyboard,
-    route_keyboard,
     LANG_KEYBOARD,
 )
 from handlers.driver_handler import (

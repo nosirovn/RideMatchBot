@@ -232,12 +232,12 @@ TEXTS: dict[str, dict[str, str]] = {
         "uz": " \n✦  BEKOR QILINDI  ✦\n \n\nQaytadan boshlash uchun /start yozing.",
     },
     "spam_limit": {
-        "en": " \n✦  LIMIT REACHED ⚠️  ✦\n \n\nYou have 3 active posts.\nDelete one with /my\_posts first.\n\n ",
-        "ar": " \n✦  تم بلوغ الحد ⚠️  ✦\n \n\nلديك 3 منشورات نشطة.\nاحذف واحدًا أولاً بـ /my\_posts.\n\n ",
-        "de": " \n✦  LIMIT ERREICHT ⚠️  ✦\n \n\nDu hast 3 aktive Posts.\nLösche einen mit /my\_posts.\n\n ",
-        "fr": " \n✦  LIMITE ATTEINTE ⚠️  ✦\n \n\nVous avez 3 publications actives.\nSupprimez-en une avec /my\_posts.\n\n ",
-        "ru": " \n✦  ЛИМИТ ДОСТИГНУТ ⚠️  ✦\n \n\nУ вас 3 активных поездки.\nУдалите одну через /my\_posts.\n\n ",
-        "uz": " \n✦  CHEGARAGA YETILDI ⚠️  ✦\n \n\nSizda 3 ta faol post bor.\n/my\_posts orqali birini oʻchiring.\n\n ",
+        "en": " \n✦  LIMIT REACHED ⚠️  ✦\n \n\nYou have 3 active posts.\nDelete one with /my_posts first.\n\n ",
+        "ar": " \n✦  تم بلوغ الحد ⚠️  ✦\n \n\nلديك 3 منشورات نشطة.\nاحذف واحدًا أولاً بـ /my_posts.\n\n ",
+        "de": " \n✦  LIMIT ERREICHT ⚠️  ✦\n \n\nDu hast 3 aktive Posts.\nLösche einen mit /my_posts.\n\n ",
+        "fr": " \n✦  LIMITE ATTEINTE ⚠️  ✦\n \n\nVous avez 3 publications actives.\nSupprimez-en une avec /my_posts.\n\n ",
+        "ru": " \n✦  ЛИМИТ ДОСТИГНУТ ⚠️  ✦\n \n\nУ вас 3 активных поездки.\nУдалите одну через /my_posts.\n\n ",
+        "uz": " \n✦  CHEGARAGA YETILDI ⚠️  ✦\n \n\nSizda 3 ta faol post bor.\n/my_posts orqali birini oʻchiring.\n\n ",
     },
     "invalid_date": {
         "en": "Invalid format. Please enter date as DD/MM/YYYY:",
