@@ -43,8 +43,20 @@ async def notify_travelers_of_new_ride(
             date=display_date, time=time_val, seats=seats,
             driver_id=driver_id,
         )
+        # Add Reserve button
+        ride_id = s.get("ride_id") or s.get("id") or 0
+        reserve_button = None
+        if ride_id:
+            reserve_button = InlineKeyboardMarkup([
+                [InlineKeyboardButton("Reserve", callback_data=f"reserve:{ride_id}")]
+            ])
         try:
-            await context.bot.send_message(chat_id=uid, text=msg, parse_mode="Markdown")
+            await context.bot.send_message(
+                chat_id=uid,
+                text=msg,
+                parse_mode="Markdown",
+                reply_markup=reserve_button
+            )
         except Exception as e:
             logger.warning("Could not notify user %s: %s", uid, e)
 
