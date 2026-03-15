@@ -79,6 +79,67 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+def _match_button(text: str, button_key: str, lang: str) -> bool:
+    """Match button text in any language. button_key can be: 'ride', 'passenger', 'adventures', 'pin', 'language', 'help'"""
+    buttons = {
+        "ride": {
+            "en": "🙋🏻‍♂️ I need a Ride",
+            "ar": "🙋🏻‍♂️ أحتاج سواري",
+            "de": "🙋🏻‍♂️ Ich brauche eine Fahrt",
+            "fr": "🙋🏻‍♂️ J'ai besoin d'un trajet",
+            "ru": "🙋🏻‍♂️ Мне нужна поездка",
+            "uz": "🙋🏻‍♂️ Menga safar kerak",
+        },
+        "passenger": {
+            "en": "🚙 I need a Passenger",
+            "ar": "🚙 أحتاج راكب",
+            "de": "🚙 Ich brauche einen Passagier",
+            "fr": "🚙 J'ai besoin d'un passager",
+            "ru": "🚙 Мне нужен пассажир",
+            "uz": "🚙 Menga yoʻlovchi kerak",
+        },
+        "adventures": {
+            "en": "📅 My Adventures",
+            "ar": "📅 مغامراتي",
+            "de": "📅 Meine Abenteuer",
+            "fr": "📅 Mes aventures",
+            "ru": "📅 Мои приключения",
+            "uz": "📅 Sarguzashtlarim",
+        },
+        "pin": {
+            "en": "📍 Drop My Pin",
+            "ar": "📍 حدد موقعي",
+            "de": "📍 Meinen Pin setzen",
+            "fr": "📍 Mon emplacement",
+            "ru": "📍 Мой пин",
+            "uz": "📍 Joylashuvim",
+        },
+        "language": {
+            "en": "🌍 Language",
+            "ar": "🌍 اللغة",
+            "de": "🌍 Sprache",
+            "fr": "🌍 Langue",
+            "ru": "🌍 Язык",
+            "uz": "🌍 Til",
+        },
+        "help": {
+            "en": "🆘 Help",
+            "ar": "🆘 مساعدة",
+            "de": "🆘 Hilfe",
+            "fr": "🆘 Aide",
+            "ru": "🆘 Помощь",
+            "uz": "🆘 Yordam",
+        },
+    }
+    if button_key in buttons:
+        # Check all languages, not just the current one
+        for btn_text in buttons[button_key].values():
+            if text == btn_text:
+                return True
+    return False
+
+
 async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message or not update.message.text:
         return
@@ -91,35 +152,32 @@ async def text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     text = update.message.text.strip()
 
     # ── Main menu button handling (works from any state) ──
-    if text == "🙋🏻‍♂️ I need a Ride":
+    lang = _lang(context)
+
+    if _match_button(text, "ride", lang):
         _clear_state(context)
         context.user_data["role"] = "traveler"
         context.user_data["state"] = "traveler_awaiting_route"
-        lang = _lang(context)
-        await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
+        await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard(lang))
         return
-    if text == "🚙 I need a Passenger":
+    if _match_button(text, "passenger", lang):
         _clear_state(context)
         context.user_data["role"] = "driver"
         context.user_data["state"] = "driver_awaiting_route"
-        lang = _lang(context)
-        await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard())
+        await update.message.reply_text(t("select_route", lang), reply_markup=route_keyboard(lang))
         return
-    if text == "📅 My Adventures":
+    if _match_button(text, "adventures", lang):
         return await my_trips_command(update, context)
-    if text == "📍 Drop My Pin":
-        lang = _lang(context)
+    if _match_button(text, "pin", lang):
         await update.message.reply_text(t("location_saved", lang), reply_markup=main_menu_keyboard(lang))
         return
-    if text == "🌍 Language":
-        lang = _lang(context)
+    if _match_button(text, "language", lang):
         await update.message.reply_text(
             t("choose_lang", lang),
             reply_markup=LANG_KEYBOARD,
         )
         return
-    if text == "🆘 Help":
-        lang = _lang(context)
+    if _match_button(text, "help", lang):
         await update.message.reply_text(
             t("help_text", lang),
             parse_mode="Markdown",

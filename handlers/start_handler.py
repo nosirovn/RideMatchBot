@@ -202,6 +202,9 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     set_user_lang(user_id, lang)
     context.user_data["lang"] = lang
 
+    # Clear any previous state
+    _clear_state(context)
+
     await query.edit_message_text(f"Language set! ✅")
     # Now show main menu in the chat
     await context.bot.send_message(
