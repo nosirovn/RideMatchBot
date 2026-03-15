@@ -106,13 +106,26 @@ async def notify_reservation_result(
     keyboard = None
 
     if approved:
+        # Show passenger info
+        passenger_name = None
+        passenger_id = None
+        ride = get_ride(ride_id) if ride_id else None
+        if ride:
+            reservations = ride.get("reservations") if hasattr(ride, "get") else []
+            for rv in reservations:
+                if rv.get("traveler_id") == traveler_id and rv.get("status") == "approved":
+                    passenger_name = rv.get("traveler_name") or f"Passenger #{traveler_id}"
+                    passenger_id = rv.get("traveler_id")
+                    break
+        passenger_name = passenger_name or f"Passenger #{traveler_id}"
+        passenger_id = passenger_id or traveler_id
         text = t(
             "reservation_approved", lang,
             driver=driver_name, route=route,
             date=display_date, time=time_val,
             driver_id=driver_id,
         )
-        # Add action buttons for approved rides
+        text += f"\n\n👤 [{passenger_name}](tg://user?id={passenger_id})"
         buttons = []
         if driver_id:
             buttons.append(InlineKeyboardButton(

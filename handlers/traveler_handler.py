@@ -327,9 +327,12 @@ async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
             driver_name = res.get('driver_username') or f"Driver #{res.get('driver_id', '?')}"
             driver_id = res.get('driver_id', 0)
+            tname = res.get('traveler_name') or f"Passenger #{res.get('traveler_id', '?')}"
+            tid = res.get('traveler_id', 0)
             lines.append(
                 f"{status_icon} {res['route']} — {res['date']}\n"
                 f"   🚗 [{driver_name}](tg://user?id={driver_id}) | {res['status']}\n"
+                f"   👤 [{tname}](tg://user?id={tid})\n"
             )
 
     lines.append("")
@@ -375,9 +378,12 @@ async def my_trips_traveler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
         driver_name = res.get('driver_username') or f"Driver #{res.get('driver_id', '?')}"
         driver_id = res.get('driver_id', 0)
+        tname = res.get('traveler_name') or f"Passenger #{res.get('traveler_id', '?')}"
+        tid = res.get('traveler_id', 0)
         lines.append(
             f"{status_icon} {res['route']} — {res['date']}\n"
             f"   🚗 [{driver_name}](tg://user?id={driver_id}) | {res['status']}\n"
+            f"   👤 [{tname}](tg://user?id={tid})\n"
         )
 
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")

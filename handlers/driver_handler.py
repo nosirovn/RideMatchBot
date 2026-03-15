@@ -71,17 +71,19 @@ async def my_trips_driver(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         approved_list = [rv for rv in reservations if rv["status"] == "approved"]
         pending_list = [rv for rv in reservations if rv["status"] == "pending"]
         lines.append(
-            f"🚗 *{r['route']}*\n"
-            f"  📅 {dd}  ⏰ {r['time']}\n"
-            f"  💺 {r['seats_available']}/{r['seats_total']} seats left\n"
-            f"  ✅ {len(approved_list)} approved · ⏳ {len(pending_list)} pending\n"
+            f" 🚗 *{r['route']}*\n"
+            f" 📅 {dd}\n"
+            f" ⏰ {r['time']}\n"
+            f" 💺 {r['seats_available']}/{r['seats_total']} seats left\n"
+            f" ✅ {len(approved_list)} approved\n"
+            f" ⏳ {len(pending_list)} pending\n"
         )
         for rv in approved_list:
-            tname = rv.get('traveler_name') or 'Traveler'
+            tname = rv.get('traveler_name') or f"Traveler #{rv.get('traveler_id', '?')}"
             tid = rv.get('traveler_id', 0)
             lines.append(f"    ✅ [{tname}](tg://user?id={tid}) ({rv['seats_reserved']} seat)\n")
         for rv in pending_list:
-            tname = rv.get('traveler_name') or 'Traveler'
+            tname = rv.get('traveler_name') or f"Traveler #{rv.get('traveler_id', '?')}"
             tid = rv.get('traveler_id', 0)
             lines.append(f"    ⏳ [{tname}](tg://user?id={tid}) ({rv['seats_reserved']} seat)\n")
         lines.append(f"  /delete\\_{r['id']}\n")
@@ -195,12 +197,12 @@ async def process_driver_seats(seats: int, user_id: int, user_first_name: str,
 
     await send_message(
         f"✅ *Ride Posted*\n\n"
-        f"🚗 Driver: [{name}](tg://user?id={user_id})\n"
-        f"📍 Route: {route}\n"
-        f"📅 Date: {display_date}\n"
-        f"⏰ Time: {time_val}\n"
-        f"💺 Seats: {seats}\n"
-        f"Rating: {rating_str}\n\n"
+        f"🚗  Driver: [{name}](tg://user?id={user_id})\n"
+        f"📍  Route: {route}\n"
+        f"📅  Date: {display_date}\n"
+        f"⏰  Time: {time_val}\n"
+        f"💺  Seats: {seats}\n"
+        f"⭐️  Rating: {rating_str}\n\n"
         f"Travelers can now find your ride.",
     )
 
