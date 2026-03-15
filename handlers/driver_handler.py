@@ -20,7 +20,7 @@ from database import (
     )
 from services.notification_service import notify_travelers_of_new_ride
 from handlers.start_handler import (
-        route_keyboard, _lang, _clear_state,
+        _lang, _clear_state,
     )
 from handlers.calendar_handler import create_calendar_keyboard, create_hour_keyboard
 
@@ -43,7 +43,7 @@ async def post_driver_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(
         t("driver_mode", lang),
         parse_mode="Markdown",
-        reply_markup=route_keyboard(),
+        reply_markup=main_menu_keyboard(),
     )
 
 
@@ -136,7 +136,7 @@ async def handle_driver_route(update: Update, context: ContextTypes.DEFAULT_TYPE
     text = update.message.text.strip()
     lang = _lang(context)
     if text not in ROUTES:
-        await update.message.reply_text(t("choose_route_btn", lang), reply_markup=route_keyboard())
+        await update.message.reply_text(t("choose_route_btn", lang), reply_markup=main_menu_keyboard())
         return
     context.user_data["route"] = text
     context.user_data["state"] = "driver_awaiting_date_selection"
