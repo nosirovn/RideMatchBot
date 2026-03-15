@@ -29,7 +29,7 @@ def create_calendar_keyboard(year: int, month: int) -> InlineKeyboardMarkup:
     kb.append([
         InlineKeyboardButton("◀️", callback_data=f"cal:prev:{prev_y}:{prev_m}"),
         InlineKeyboardButton(
-            f"✦ {cal.month_name[month].upper()} {year} ✦",
+            f"**{cal.month_name[month].upper()} {year}**",
             callback_data="cal:noop",
         ),
         InlineKeyboardButton("▶️", callback_data=f"cal:next:{next_y}:{next_m}"),
@@ -80,7 +80,7 @@ def create_hour_keyboard() -> InlineKeyboardMarkup:
 
     # Header
     kb.append([
-        InlineKeyboardButton("✦  SELECT TIME  ✦", callback_data="cal:noop")
+        InlineKeyboardButton("**SELECT TIME**", callback_data="cal:noop")
     ])
 
     sections = [
@@ -183,9 +183,9 @@ async def select_day_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     await query.edit_message_text(
         text=(
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"✦  DATE CONFIRMED  ✦\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f""
+            f"**DATE CONFIRMED**\n"
+            f"\n"
             f"  📅  {display_date}\n\n"
             f"Now select your departure time:"
         ),
@@ -237,16 +237,16 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await query.edit_message_text(
         text=(
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"✦  BOOKING SUMMARY  ✦\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f""
+            f"**BOOKING SUMMARY**\n"
+            f"\n"
             f"  📅  {display_date}\n"
             f"  ⏰  {time_str}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"\n"
             f"⚠️ *Attention:* Please ensure your Name\n"
             f"and Phone Number are visible in your\n"
             f"Telegram profile settings.\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"\n"
             f"{prompt}"
         ),
         parse_mode="Markdown",

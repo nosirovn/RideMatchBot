@@ -105,7 +105,7 @@ async def notify_reservation_result(
         if driver_id:
             buttons.append(InlineKeyboardButton(
                 "📞 Contact Driver",
-                callback_data=f"contact:{driver_id}"
+                url=f"tg://user?id={driver_id}"
             ))
         if ride_id:
             buttons.append(InlineKeyboardButton(

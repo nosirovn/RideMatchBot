@@ -289,9 +289,9 @@ async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     if rides:
         lines.append(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  YOUR POSTED RIDES  ✦\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            ""
+            "**YOUR POSTED RIDES**\n"
+            ""
         )
         for r in rides:
             try:
@@ -319,9 +319,9 @@ async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     if reservations:
         lines.append(
-            "\n━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✦  YOUR RESERVATIONS  ✦\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "\n"
+            "**YOUR RESERVATIONS**\n"
+            ""
         )
         for res in reservations:
             status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
@@ -332,7 +332,7 @@ async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 f"   🚗 [{driver_name}](tg://user?id={driver_id}) | {res['status']}\n"
             )
 
-    lines.append("━━━━━━━━━━━━━━━━━━━━━━")
+    lines.append("")
 
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
@@ -367,9 +367,9 @@ async def my_trips_traveler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return
 
     lines = [
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "✦  YOUR RESERVATIONS  ✦\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        ""
+        "**YOUR RESERVATIONS**\n"
+        ""
     ]
     for res in reservations:
         status_icon = "✅" if res["status"] == "approved" else "⏳" if res["status"] == "pending" else "❌"
