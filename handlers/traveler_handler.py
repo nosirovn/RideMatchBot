@@ -302,10 +302,12 @@ async def my_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             approved_list = [rv for rv in reservs if rv["status"] == "approved"]
             pending_list = [rv for rv in reservs if rv["status"] == "pending"]
             lines.append(
-                f"🚗 *{r['route']}*\n"
-                f"  📅 {dd}  ⏰ {r['time']}\n"
+                f"  🚗 *{r['route']}*\n"
+                f"  📅 {dd}\n"
+                f"  ⏰ {r['time']}\n"
                 f"  💺 {r['seats_available']}/{r['seats_total']} seats left\n"
-                f"  ✅ {len(approved_list)} approved · ⏳ {len(pending_list)} pending\n"
+                f"  ✅ {len(approved_list)} approved\n" 
+                f"  ⏳ {len(pending_list)} pending\n"
             )
             for rv in approved_list:
                 tname = rv.get('traveler_name') or f"Traveler #{rv.get('traveler_id', '?')}"

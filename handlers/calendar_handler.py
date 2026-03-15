@@ -237,17 +237,13 @@ async def select_hour_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await query.edit_message_text(
         text=(
-            f""
             f"**BOOKING SUMMARY**\n"
-            f"\n"
             f"  📅  {display_date}\n"
             f"  ⏰  {time_str}\n\n"
-            f"\n"
+            f"{prompt}"
             f"⚠️ *Attention:* Please ensure your Name\n"
             f"and Phone Number are visible in your\n"
             f"Telegram profile settings.\n\n"
-            f"\n"
-            f"{prompt}"
         ),
         parse_mode="Markdown",
         reply_markup=number_kb,
